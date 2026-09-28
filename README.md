@@ -2,7 +2,7 @@
 
 A small, interactive fire and fluid experiment for the browser. It uses a low-resolution WebGL2 simulation, then shades the result across a full-screen canvas. Move the pointer to stir it; tune **rise**, **curl**, **glow**, and **trail** in the live controls.
 
-**[Live demo](https://inigobo.github.io/fire-2d/)** · [Simulation notes](docs/SIMULATION.md) · [References](docs/REFERENCES.md) · [Provenance](docs/PROVENANCE.md)
+**[Live demo](https://fire-2d-simulator.inniber.chatgpt.site)** · [Simulation notes](docs/SIMULATION.md) · [References](docs/REFERENCES.md) · [Provenance](docs/PROVENANCE.md)
 
 ## Run locally
 
@@ -12,7 +12,7 @@ Node 20.11+ is sufficient. There are no runtime dependencies and no build step.
 npm run dev
 ```
 
-Open `http://localhost:5173`. Run `npm run check` for JavaScript syntax checks. GitHub Pages serves the same static files from the repository root.
+Open `http://localhost:5173`. Run `npm run check` for JavaScript syntax checks. The repository includes a GitHub Pages workflow for hosting the same static files. To activate that public URL, the repository owner must enable Pages with **GitHub Actions** as the build source in **Settings → Pages**; the workflow token cannot enable a new Pages site by itself.
 
 ## How it works
 
