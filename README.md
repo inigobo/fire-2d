@@ -8,15 +8,15 @@ The [scroll test](https://fire-2d-simulator.inniber.chatgpt.site/examples/scroll
 
 ## Use it on another website
 
-The browser renderer now has a small package entry point. It can be installed from GitHub without copying source files:
+The browser renderer has a small package entry point. Install it without copying source files:
 
 ```sh
-npm install github:inigobo/fire-2d
+npm install @inigobo/fire-2d
 ```
 
 Import `createFire` from `@inigobo/fire-2d`, pass your canvas, choose `candle`, `hearth`, or `bonfire`, and call `destroy()` when the page removes it. Override the preset with settings, including emitter position, size, and power. The demo itself imports the same entry point; its controls are page UI and are not part of the package. See [integration examples](docs/INTEGRATION.md) for plain JavaScript and React/Next.js, settings, fallbacks, and lifecycle details.
 
-The package is **not yet published to the npm registry**. A GitHub install resolves to a commit in your lockfile; use a specific commit hash when you need reproducible installations across projects. The `@inigobo` npm scope requires ownership of the matching npm account before a registry release.
+The public GitHub source can also be installed with `npm install github:inigobo/fire-2d#<commit-sha>` when a specific source revision is needed. npm records the installed version in your lockfile.
 
 ## Run locally
 

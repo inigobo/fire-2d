@@ -1,12 +1,12 @@
 # Embedding Fire 2D
 
-Install the source package from the public GitHub repository:
+Install the package:
 
 ```sh
-npm install github:inigobo/fire-2d
+npm install @inigobo/fire-2d
 ```
 
-The npm registry has **not** received a release yet. Pin a commit (`github:inigobo/fire-2d#<commit-sha>`) for a stable deployment. npm also records the resolved revision in your lockfile. No runtime dependencies or build step are required inside this package; your website's normal JavaScript bundler resolves its ES modules.
+You can alternatively pin a GitHub source revision with `npm install github:inigobo/fire-2d#<commit-sha>`. No runtime dependencies or build step are required inside this package; your website's normal JavaScript bundler resolves its ES modules.
 
 ## Plain JavaScript
 
