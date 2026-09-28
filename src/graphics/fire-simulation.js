@@ -35,7 +35,7 @@ export class FireSimulation {
     this.intersectionObserver.observe(stage);
     this.resize();
     this.schedule();
-    onStatus('Move your pointer to stir the flame');
+    onStatus('Simulation running');
   }
 
   setSettings(partial) { Object.assign(this.settings, partial); }

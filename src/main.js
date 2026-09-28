@@ -43,7 +43,7 @@ toggle.addEventListener('click', () => {
   enabled = !enabled;
   if (enabled && !simulation) start();
   simulation?.setEnabled(enabled);
-  setStatus(enabled ? 'Move your pointer to stir the flame' : 'Motion paused');
+  setStatus(enabled ? 'Simulation running' : 'Motion paused');
   updateToggle();
 });
 
@@ -52,7 +52,7 @@ reducedMotion.addEventListener('change', event => {
   if (enabled && !simulation) start();
   simulation?.setEnabled(enabled);
   updateToggle();
-  setStatus(enabled ? 'Move your pointer to stir the flame' : 'Motion paused for reduced motion');
+  setStatus(enabled ? 'Simulation running' : 'Motion paused for reduced motion');
 });
 
 canvas.addEventListener('webglcontextlost', event => {
