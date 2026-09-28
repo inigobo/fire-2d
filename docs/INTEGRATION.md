@@ -35,7 +35,7 @@ try {
 // When this view is removed: fire?.destroy();
 ```
 
-The interaction target provides dimensions and receives desktop pointer movement. It can contain other links and controls; the renderer does not capture pointer events or touch scrolling. The canvas only paints pixels. The host owns sizing, layout, text, static fallback, and reduced-motion policy.
+The interaction target provides dimensions and receives desktop pointer movement and touch taps. It can contain other links and controls; interactive elements are ignored for touch pulses. The renderer does not capture pointer events or touch scrolling. The canvas only paints pixels. The host owns sizing, layout, text, static fallback, and reduced-motion policy. A [scrolling example](../examples/scroll.html) shows the renderer inside a longer page.
 
 ## React or Next.js client component
 

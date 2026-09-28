@@ -37,12 +37,12 @@ The timestep is capped at 33 ms. The solver targets responsive visual motion rat
 - New, hot material: pale amber or white core. Cooling material: saturated warm red and a faint darker edge. Palette should be configurable by the host.
 - Preserve dark negative space around type. Bloom should suggest light without washing out controls.
 - Desktop pointer affects a local radius and adds momentum proportional to movement; do not replace the native cursor or block links.
-- Touch should not capture scrolling. Prefer autonomous fire on phones unless a contained interaction can be proven comfortable.
+- Touch does not capture scrolling. A short stationary tap adds one heat and momentum pulse; a moving or cancelled touch does not. The autonomous emitter continues without input.
 - The host controls `start`, `pause`, `resume`, `resize`, and `destroy`, and receives a static fallback when WebGL is unavailable or reduced motion is preferred.
 
 ## Performance targets to measure
 
 - Stable interaction on a representative lower-powered phone and desktop browser, assessed with frame time and GPU work rather than an unverified FPS claim.
 - Adjustable simulation, dye, and bloom resolutions; capped device pixel ratio.
-- No animation work while the hero or document is hidden; no retained listeners, textures, framebuffers, or animation loop after destroy.
+- No animation work while the hero or document is hidden; no retained listeners, textures, framebuffers, or animation loop after destroy. The [scroll example](../examples/scroll.html) demonstrates entry, exit, and return.
 - The static fallback, real HTML text, and page navigation work before the renderer loads and when it fails.

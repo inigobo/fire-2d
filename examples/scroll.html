@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b090d" />
+    <meta name="description" content="See Fire 2D inside a scrolling page on desktop and mobile." />
+    <title>Fire 2D — scroll test</title>
+    <link rel="stylesheet" href="./scroll.css" />
+  </head>
+  <body>
+    <nav class="topbar" aria-label="Example navigation">
+      <a class="brand" href="../">FIRE <span>/</span> 2D</a>
+      <span>SCROLL TEST</span>
+    </nav>
+
+    <main>
+      <section class="lead" aria-labelledby="lead-title">
+        <p class="eyebrow">01 / BEFORE THE FLAME</p>
+        <h1 id="lead-title">See how the fire lives <em>on a page.</em></h1>
+        <p>Scroll down to the flame. On a phone, tap it once for a little heat, then swipe as usual.</p>
+        <a class="scroll-cue" href="#flame-section">Scroll to the flame ↓</a>
+      </section>
+
+      <section class="flame-section" id="flame-section" aria-labelledby="flame-title">
+        <div class="fallback" aria-hidden="true"></div>
+        <canvas id="fire" aria-hidden="true"></canvas>
+        <div class="flame-copy">
+          <p class="eyebrow">02 / IN THE PAGE</p>
+          <h2 id="flame-title">A little<br /><em>heat.</em></h2>
+          <p class="desktop-hint">Move your pointer to stir.</p>
+          <p class="touch-hint">Tap to stir. Swipe to scroll.</p>
+        </div>
+        <button type="button" id="motion-toggle" class="motion-toggle">Pause motion</button>
+      </section>
+
+      <section class="after" aria-labelledby="after-title">
+        <div>
+          <p class="eyebrow">03 / AFTER THE FLAME</p>
+          <h2 id="after-title">The page keeps going.</h2>
+          <p>The canvas travels with its section. Once the section leaves view, animation stops. Scroll back to see it resume.</p>
+        </div>
+        <a href="#flame-section">Return to the flame ↑</a>
+      </section>
+    </main>
+
+    <p class="viewport-status" id="viewport-status" role="status">Preparing the flame…</p>
+    <script type="module" src="./scroll.js"></script>
+  </body>
+</html>

@@ -12,6 +12,7 @@ export class FireSimulation {
     this.settings = { ...DEFAULTS, ...settings };
     this.splats = [];
     this.previousPointer = null;
+    this.touchStart = null;
     this.enabled = autoplay;
     this.inView = true;
     this.frame = 0;
@@ -19,10 +20,16 @@ export class FireSimulation {
     this.started = performance.now();
 
     this.onPointerMove = this.onPointerMove.bind(this);
+    this.onPointerDown = this.onPointerDown.bind(this);
+    this.onPointerUp = this.onPointerUp.bind(this);
+    this.onPointerCancel = () => { this.touchStart = null; };
     this.onPointerLeave = () => { this.previousPointer = null; };
     this.onVisibility = () => this.schedule();
     this.onResize = () => this.resize();
     stage.addEventListener('pointermove', this.onPointerMove, { passive: true });
+    stage.addEventListener('pointerdown', this.onPointerDown, { passive: true });
+    stage.addEventListener('pointerup', this.onPointerUp, { passive: true });
+    stage.addEventListener('pointercancel', this.onPointerCancel, { passive: true });
     stage.addEventListener('pointerleave', this.onPointerLeave, { passive: true });
     document.addEventListener('visibilitychange', this.onVisibility);
     this.resizeObserver = new ResizeObserver(this.onResize);
@@ -74,7 +81,14 @@ export class FireSimulation {
   }
 
   onPointerMove(event) {
-    if (event.pointerType === 'touch' || !this.enabled) return;
+    if (event.pointerType === 'touch') {
+      if (this.touchStart && event.pointerId === this.touchStart.id &&
+          Math.hypot(event.clientX - this.touchStart.clientX, event.clientY - this.touchStart.clientY) > 12) {
+        this.touchStart = null;
+      }
+      return;
+    }
+    if (!this.enabled) return;
     const rect = this.stage.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width;
     const y = 1 - (event.clientY - rect.top) / rect.height;
@@ -85,7 +99,27 @@ export class FireSimulation {
     const dx = x - previous.x;
     const dy = y - previous.y;
     if (Math.hypot(dx * rect.width, dy * rect.height) < 1) return;
-    this.splats.push({ x, y, dx: Math.max(-0.07, Math.min(0.07, dx)), dy: Math.max(-0.07, Math.min(0.07, dy)) });
+    this.splats.push({ x, y, dx: Math.max(-0.07, Math.min(0.07, dx)), dy: Math.max(-0.07, Math.min(0.07, dy)), intensity: 1 });
+    if (this.splats.length > 12) this.splats.splice(0, this.splats.length - 12);
+  }
+
+  onPointerDown(event) {
+    if (event.pointerType !== 'touch' || !this.enabled || !this.inView ||
+        event.target?.closest?.('a, button, input, label, select, textarea, [data-fire-ignore]')) return;
+    const rect = this.stage.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width;
+    const y = 1 - (event.clientY - rect.top) / rect.height;
+    if (x < 0 || x > 1 || y < 0 || y > 1) return;
+    // Defer injection until release, so the start of a scrolling swipe stays inert.
+    this.touchStart = { x, y, clientX: event.clientX, clientY: event.clientY, id: event.pointerId, time: performance.now() };
+  }
+
+  onPointerUp(event) {
+    const start = this.touchStart;
+    this.touchStart = null;
+    if (!start || !this.enabled || event.pointerId !== start.id || performance.now() - start.time > 450 ||
+        Math.hypot(event.clientX - start.clientX, event.clientY - start.clientY) > 12) return;
+    this.splats.push({ x: start.x, y: start.y, dx: 0, dy: 0.05, intensity: 1.5 });
     if (this.splats.length > 12) this.splats.splice(0, this.splats.length - 12);
   }
 
@@ -160,7 +194,7 @@ export class FireSimulation {
     // The same bounded input batch perturbs motion and leaves a heated trail.
     for (const splat of splats) {
       passes.draw('splat', matter.write,
-        { uPoint: [splat.x, splat.y], uValue: [0.48, 0.35], uRadius: 0.032, uAspect: aspect },
+        { uPoint: [splat.x, splat.y], uValue: [0.48 * splat.intensity, 0.35 * splat.intensity], uRadius: 0.032, uAspect: aspect },
         { uField: matter.read.texture });
       matter.swap();
     }
@@ -172,6 +206,9 @@ export class FireSimulation {
     this.enabled = false;
     this.schedule();
     this.stage.removeEventListener('pointermove', this.onPointerMove);
+    this.stage.removeEventListener('pointerdown', this.onPointerDown);
+    this.stage.removeEventListener('pointerup', this.onPointerUp);
+    this.stage.removeEventListener('pointercancel', this.onPointerCancel);
     this.stage.removeEventListener('pointerleave', this.onPointerLeave);
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.resizeObserver.disconnect();

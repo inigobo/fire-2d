@@ -4,6 +4,8 @@ A small, interactive fire and fluid experiment for the browser. It uses a low-re
 
 **[Live demo](https://fire-2d-simulator.inniber.chatgpt.site)** · [Simulation notes](docs/SIMULATION.md) · [References](docs/REFERENCES.md) · [Provenance](docs/PROVENANCE.md)
 
+The [scroll test](https://fire-2d-simulator.inniber.chatgpt.site/examples/scroll.html) places the same renderer between page sections. It shows how the canvas scrolls with its section and pauses offscreen. On touch screens, a tap adds a small heat pulse while swipes keep normal page scrolling.
+
 ## Use it on another website
 
 The browser renderer now has a small package entry point. It can be installed from GitHub without copying source files:
