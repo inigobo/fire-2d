@@ -17,6 +17,8 @@ export class FireSimulation {
     this.frame = 0;
     this.lastTime = 0;
     this.started = performance.now();
+    this.resizeObserver = null;
+    this.intersectionObserver = null;
 
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onTouchStart = this.onTouchStart.bind(this);
@@ -25,22 +27,27 @@ export class FireSimulation {
     this.onPointerLeave = () => { this.previousPointer = null; };
     this.onVisibility = () => this.schedule();
     this.onResize = () => this.resize();
-    stage.addEventListener('pointermove', this.onPointerMove, { passive: true });
-    stage.addEventListener('touchstart', this.onTouchStart, { passive: true });
-    stage.addEventListener('touchmove', this.onTouchMove, { passive: true });
-    stage.addEventListener('touchend', this.onTouchEnd, { passive: true });
-    stage.addEventListener('touchcancel', this.onTouchEnd, { passive: true });
-    stage.addEventListener('pointerleave', this.onPointerLeave, { passive: true });
-    document.addEventListener('visibilitychange', this.onVisibility);
-    this.resizeObserver = new ResizeObserver(this.onResize);
-    this.resizeObserver.observe(stage);
-    this.intersectionObserver = new IntersectionObserver(entries => {
-      this.inView = entries[0].isIntersecting;
+    try {
+      this.resize();
+      stage.addEventListener('pointermove', this.onPointerMove, { passive: true });
+      stage.addEventListener('touchstart', this.onTouchStart, { passive: true });
+      stage.addEventListener('touchmove', this.onTouchMove, { passive: true });
+      stage.addEventListener('touchend', this.onTouchEnd, { passive: true });
+      stage.addEventListener('touchcancel', this.onTouchEnd, { passive: true });
+      stage.addEventListener('pointerleave', this.onPointerLeave, { passive: true });
+      document.addEventListener('visibilitychange', this.onVisibility);
+      this.resizeObserver = new ResizeObserver(this.onResize);
+      this.resizeObserver.observe(stage);
+      this.intersectionObserver = new IntersectionObserver(entries => {
+        this.inView = entries[0].isIntersecting;
+        this.schedule();
+      }, { threshold: 0.01 });
+      this.intersectionObserver.observe(stage);
       this.schedule();
-    }, { threshold: 0.01 });
-    this.intersectionObserver.observe(stage);
-    this.resize();
-    this.schedule();
+    } catch (error) {
+      this.destroy();
+      throw error;
+    }
   }
 
   setSettings(settings) { this.settings = settings; }
@@ -231,8 +238,8 @@ export class FireSimulation {
     this.stage.removeEventListener('touchcancel', this.onTouchEnd);
     this.stage.removeEventListener('pointerleave', this.onPointerLeave);
     document.removeEventListener('visibilitychange', this.onVisibility);
-    this.resizeObserver.disconnect();
-    this.intersectionObserver.disconnect();
+    this.resizeObserver?.disconnect();
+    this.intersectionObserver?.disconnect();
     this.releaseTargets();
     this.passes.destroy();
   }

@@ -88,3 +88,51 @@ test('offscreen simulation cancels its frame and resets elapsed time', t => {
   assert.equal(simulation.frame, 0);
   assert.equal(simulation.lastTime, 0);
 });
+
+test('failed framebuffer setup releases resources before listeners are attached', t => {
+  const oldDocument = globalThis.document;
+  const oldWindow = globalThis.window;
+  const deleted = { framebuffers: 0, programs: 0, textures: 0, vertexArrays: 0 };
+  let stageListeners = 0;
+  const gl = {
+    VERTEX_SHADER: 1, FRAGMENT_SHADER: 2, COMPILE_STATUS: 3, LINK_STATUS: 4,
+    TEXTURE_2D: 5, TEXTURE_MIN_FILTER: 6, TEXTURE_MAG_FILTER: 7,
+    TEXTURE_WRAP_S: 8, TEXTURE_WRAP_T: 9, NEAREST: 10, CLAMP_TO_EDGE: 11,
+    RGBA16F: 12, RGBA: 13, HALF_FLOAT: 14, FRAMEBUFFER: 15,
+    COLOR_ATTACHMENT0: 16, FRAMEBUFFER_COMPLETE: 17, COLOR_BUFFER_BIT: 18,
+    getExtension: () => ({}),
+    createVertexArray: () => ({}), bindVertexArray: () => {},
+    createShader: () => ({}), shaderSource: () => {}, compileShader: () => {},
+    getShaderParameter: () => true, getShaderInfoLog: () => '', deleteShader: () => {},
+    createProgram: () => ({}), attachShader: () => {}, linkProgram: () => {},
+    getProgramParameter: () => true, getProgramInfoLog: () => '',
+    deleteProgram: () => { deleted.programs += 1; },
+    deleteVertexArray: () => { deleted.vertexArrays += 1; },
+    createTexture: () => ({}), bindTexture: () => {}, texParameteri: () => {}, texImage2D: () => {},
+    deleteTexture: () => { deleted.textures += 1; },
+    createFramebuffer: () => ({}), bindFramebuffer: () => {}, framebufferTexture2D: () => {},
+    checkFramebufferStatus: () => 0,
+    deleteFramebuffer: () => { deleted.framebuffers += 1; },
+  };
+  const stage = {
+    addEventListener: () => { stageListeners += 1; },
+    removeEventListener: () => {},
+    getBoundingClientRect: () => ({ width: 800, height: 600 }),
+  };
+  globalThis.document = { hidden: false, addEventListener: () => {}, removeEventListener: () => {} };
+  globalThis.window = { devicePixelRatio: 1, innerWidth: 1000 };
+  t.after(() => {
+    globalThis.document = oldDocument;
+    globalThis.window = oldWindow;
+  });
+
+  assert.throws(
+    () => new FireSimulation({ getContext: () => gl }, stage),
+    /Floating-point framebuffer is incomplete/,
+  );
+  assert.equal(stageListeners, 0);
+  assert.equal(deleted.textures, 1);
+  assert.equal(deleted.framebuffers, 1);
+  assert.ok(deleted.programs > 0);
+  assert.equal(deleted.vertexArrays, 1);
+});
