@@ -1,0 +1,10 @@
+{
+  "name": "fire-2d",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/dev-server.mjs",
+    "check": "node --check src/main.js && node --check src/graphics/gl.js && node --check src/graphics/shaders.js && node --check src/graphics/fire-simulation.js"
+  }
+}

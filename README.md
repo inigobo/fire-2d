@@ -1,30 +1,37 @@
 # Fire 2D
 
-An experimental, browser-based fire and fluid renderer. The first target is an interactive website hero: fluid motion that responds to the pointer, with a persistent rising flame, glow, and a quiet static fallback. The project is deliberately generic; Akelarre's website is the first planned integration.
+A small, interactive fire and fluid experiment for the browser. It uses a low-resolution WebGL2 simulation, then shades the result across a full-screen canvas. Move the pointer to stir it; tune **rise**, **curl**, **glow**, and **trail** in the live controls.
 
-**Status:** research and design. No simulator implementation has been written yet.
+**[Live demo](https://inigobo.github.io/fire-2d/)** · [Simulation notes](docs/SIMULATION.md) · [References](docs/REFERENCES.md) · [Provenance](docs/PROVENANCE.md)
 
-## Intent
+## Run locally
 
-- Write the simulation and rendering code ourselves, with AI assistance, from published algorithms and documented techniques.
-- Preserve the satisfying curls and pointer response of interactive fluid demos while giving the effect heat, upward motion, flame structure, and a restrained glow.
-- Expose a small renderer API for embedding in a React/Next.js hero. Keep the simulation independent of React.
-- Make desktop, touch, reduced-motion, and non-WebGL experiences intentional.
-- Describe the sources and our own contributions accurately. See [provenance](docs/PROVENANCE.md).
+Node 20.11+ is sufficient. There are no runtime dependencies and no build step.
 
-## Start here
+```sh
+npm run dev
+```
 
-1. [Research references](docs/REFERENCES.md) — sources, licenses, and what to learn from each.
-2. [Simulation design](docs/SIMULATION.md) — fields, update loop, fire model, and rendering direction.
-3. [Milestones](docs/ROADMAP.md) — small, reviewable steps from fluid to fire to integration.
-4. [Provenance policy](docs/PROVENANCE.md) — how to study existing work without copying implementations.
+Open `http://localhost:5173`. Run `npm run check` for JavaScript syntax checks. GitHub Pages serves the same static files from the repository root.
 
-## Proposed scope
+## How it works
 
-A 2D GPU grid with velocity, dye/emission, and temperature fields. Heat and a controllable emitter create rising movement; a pointer injects force and heat. Vorticity restores small curls. A display pass maps temperature and intensity into a fire palette and glow. A fuel/combustion model is a later experiment, not a prerequisite for the first visually convincing result.
+The state is stored in half-float textures: velocity, heat plus visible density, pressure, divergence, and curl. Each animation frame:
 
-The implementation should be evaluated in a standalone playground before it is integrated into the Akelarre hero. The existing site story is [akeweb#38](https://github.com/inigobo/akeweb/issues/38).
+1. Backtrace and interpolate velocity; add upward buoyancy and a small wavering force from heat.
+2. Estimate curl and apply vorticity confinement; inject local pointer momentum.
+3. Compute divergence, iterate the pressure equation 16 times, and subtract its gradient.
+4. Backtrace heat and density through the projected velocity; cool, fade, and emit a fresh flame at the base. Pointer movement also leaves a local heated trail.
+5. Shade heat from red to amber to pale gold, multiplied by density. Broad nearby samples add a glow, and a faint animated background suggests rising heat.
 
-## License
+See [simulation notes](docs/SIMULATION.md) for the equations and implementation limits. The code is divided into [WebGL resources and passes](src/graphics/gl.js), [shader programs](src/graphics/shaders.js), [simulation and lifecycle](src/graphics/fire-simulation.js), and [page controls](src/main.js). This is an expressive heated-dye model, not a combustion or smoke solver.
 
-Original material in this repository is MIT licensed; see [LICENSE](LICENSE). This does not relicense code from referenced projects. Any third-party code later incorporated must retain its own required notices and be documented in [provenance](docs/PROVENANCE.md).
+## Behaviour and performance
+
+The field's longest side is capped at 256 cells on desktop and 176 on narrower screens. The canvas pixel ratio is capped at 1.5 or 1.25. A frame runs a fixed number of small GPU passes and processes at most four pointer events. Animation pauses when the page is hidden or the stage leaves view; elapsed time is capped on resume. Touch scrolling stays native. Reduced-motion visitors see a CSS static composition and can opt into motion. The page also falls back when WebGL2 or float render targets are unavailable.
+
+This is a first visual prototype. Quality and speed still need measurements on real phones and integrated page layouts. Packaging for other sites is a future step; the renderer is independent of React.
+
+## Credits and license
+
+Implementation written for this project with AI assistance from the published algorithms in [references](docs/REFERENCES.md). No code or shaders from the referenced repositories are incorporated. [Provenance](docs/PROVENANCE.md) records that boundary. Original repository material is [MIT licensed](LICENSE).

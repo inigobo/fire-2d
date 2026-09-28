@@ -13,7 +13,7 @@ This project intends to implement a fire renderer from published fluid algorithm
 
 ## Incorporated third-party source
 
-None at repository creation. This register must be updated before third-party source is committed.
+None in the current prototype. This register must be updated before third-party source is committed.
 
 | Component/files | Upstream URL and revision | License and notice location | Changes |
 | --- | --- | --- | --- |
@@ -22,3 +22,5 @@ None at repository creation. This register must be updated before third-party so
 ## Original contributions to document as we build
 
 Record the chosen emitter, heat and buoyancy model, pointer response, rendering palette, bloom, quality scaling, fallbacks, and the design iterations that distinguish this renderer. This is useful both for maintainers and a truthful portfolio case study.
+
+The first prototype uses a pulsing Gaussian base emitter, heat-driven buoyancy, a pointer momentum and heat trail, a warm spectral ramp, a lightweight eight-neighbour halo, and a faint background shimmer. The WebGL2 shader and orchestration code was authored for this repository with AI assistance from the equations and concepts cited in [references](REFERENCES.md); no source from those projects was pasted into this implementation.

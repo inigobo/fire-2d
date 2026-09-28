@@ -1,6 +1,6 @@
-# Simulation design (working draft)
+# Simulation design
 
-This is an implementation plan, not a claim of physical accuracy. The first goal is an expressive, efficient 2D effect.
+This documents the implemented heated-dye prototype, not a claim of physical accuracy. It follows the semi-Lagrangian and projection ideas in [Stam](REFERENCES.md) and [GPU Gems](REFERENCES.md), with a fire-specific buoyancy model.
 
 ## State
 
@@ -18,14 +18,13 @@ Render at a higher display resolution than the simulation grid; use distinct qua
 
 For timestep `dt`, begin with the velocity field from the previous frame:
 
-1. **Advect velocity and scalar fields.** Semi-Lagrangian advection samples the previous field at the back-traced position: `q_next(x) = q_prev(x - dt * u(x))`, with interpolation and explicit boundary handling.
-2. **Inject sources.** A narrow, softly varying emitter near the base adds heat and intensity. Pointer motion adds localized velocity, heat, and intensity. A still pointer should not flood the field.
-3. **Apply forces.** Hot cells receive an upward force, approximately `f_y = buoyancy * (T - ambient)`. Add optional low-amplitude wind and vorticity confinement to restore curls lost to numerical smoothing.
-4. **Project velocity.** Compute `div(u*)`, solve `∇²p = div(u*) / dt` iteratively, then set `u = u* - dt * ∇p` to reduce divergence.
-5. **Cool and dissipate.** Reduce `T` and `D` over time so bright cores become darker, thinner trails and eventually vanish. Clamp values and timestep to avoid unstable spikes after a hidden tab resumes.
-6. **Display.** Convert heat and intensity to colour and alpha. Add a restrained bloom pass; consider a separate, subtle heat-distortion layer. Keep all text outside the canvas.
+1. **Advect velocity.** Semi-Lagrangian advection samples the previous field at the back-traced position: `q_next(x) = q_prev(x - dt * u(x))`, with manual bilinear interpolation and clamped edge sampling.
+2. **Apply forces.** Hot cells receive an upward force, approximately `f_y = b T`, plus a gentle localized base lift and low-amplitude wavering. Vorticity confinement uses the normalized gradient of absolute curl, rotated by 90 degrees, to restore curls lost to interpolation. Pointer movement injects a Gaussian momentum impulse; a still pointer does not accumulate force.
+3. **Project velocity.** Compute `div(u*)`, solve `∇²p = div(u*) / dt` with 16 Jacobi iterations, then set `u = u* - dt * ∇p`. Horizontal and vertical weights account for different grid dimensions. This is an approximate projection; clamped texture edges are not a complete no-slip boundary condition.
+4. **Advect and emit.** Backtrace `T` and `D` through the projected velocity. Exponential decay cools heat and fades density. A time-varying Gaussian emitter adds both fields near the bottom; recent pointer events add a heated trail.
+5. **Display.** Map heat to a red/amber/gold/white ramp, scale it by density, and composite a restrained multi-sample halo. A subtle animated ambient band evokes background heat. Text remains HTML outside the canvas.
 
-The exact ordering of advection, forces, projection, and source injection will be validated in a minimal prototype against the references. This document intentionally specifies behaviour rather than copying a particular shader or update function.
+The timestep is capped at 33 ms. The solver targets responsive visual motion rather than an accurate physical flame; pressure convergence and boundary behaviour can be improved in later experiments.
 
 ## Fire experiments
 

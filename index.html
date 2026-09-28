@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b090d" />
+    <meta name="description" content="Fire 2D: an interactive WebGL fire and fluid experiment." />
+    <title>Fire 2D — interactive experiment</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <main class="stage" id="stage">
+      <div class="fallback" aria-hidden="true"></div>
+      <canvas id="fire" aria-hidden="true"></canvas>
+      <div class="grain" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="Fire 2D home">FIRE<span> / </span>2D</a>
+        <a class="source-link" href="https://github.com/inigobo/fire-2d" target="_blank" rel="noopener noreferrer">Source ↗</a>
+      </header>
+
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="live-dot"></span> An interactive fluid experiment</p>
+        <h1>Give the<br /><em>fire</em> a little<br />air.</h1>
+        <p class="intro">Move your pointer through the flame. The heat rises, curls, cools, and makes room for the next spark.</p>
+      </div>
+
+      <aside class="controls" aria-label="Fire controls">
+        <div class="controls-heading"><span>Shape the fire</span><span class="controls-index">01 / 04</span></div>
+        <label><span>Rise</span><input id="rise" type="range" min="0" max="100" value="55" /><output for="rise" id="rise-value">55</output></label>
+        <label><span>Curl</span><input id="curl" type="range" min="0" max="100" value="42" /><output for="curl" id="curl-value">42</output></label>
+        <label><span>Glow</span><input id="glow" type="range" min="0" max="100" value="64" /><output for="glow" id="glow-value">64</output></label>
+        <label><span>Trail</span><input id="trail" type="range" min="0" max="100" value="58" /><output for="trail" id="trail-value">58</output></label>
+        <button type="button" id="motion-toggle" class="motion-toggle">Pause motion <span aria-hidden="true">Ⅱ</span></button>
+      </aside>
+
+      <footer class="footer"><span>WEBGL2 / REAL-TIME</span><span id="status" role="status">Loading the fire…</span><span>MOVE TO STIR</span></footer>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
