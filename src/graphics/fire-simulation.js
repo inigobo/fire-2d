@@ -1,18 +1,17 @@
 import { createContext, createPair, createTarget, destroyPair, destroyTarget, Passes } from './gl.js';
 import { shaders } from './shaders.js';
-
-const DEFAULTS = { rise: 55, curl: 42, glow: 64, trail: 58 };
+import { settingsForPreset } from '../config.js';
 
 export class FireSimulation {
-  constructor(canvas, stage, settings = {}, autoplay = true) {
+  constructor(canvas, stage, settings = settingsForPreset(), autoplay = true) {
     this.canvas = canvas;
     this.stage = stage;
     this.gl = createContext(canvas);
     this.passes = new Passes(this.gl, shaders);
-    this.settings = { ...DEFAULTS, ...settings };
+    this.settings = settings;
     this.splats = [];
     this.previousPointer = null;
-    this.touchStart = null;
+    this.activeTouch = null;
     this.enabled = autoplay;
     this.inView = true;
     this.frame = 0;
@@ -20,16 +19,17 @@ export class FireSimulation {
     this.started = performance.now();
 
     this.onPointerMove = this.onPointerMove.bind(this);
-    this.onPointerDown = this.onPointerDown.bind(this);
-    this.onPointerUp = this.onPointerUp.bind(this);
-    this.onPointerCancel = () => { this.touchStart = null; };
+    this.onTouchStart = this.onTouchStart.bind(this);
+    this.onTouchMove = this.onTouchMove.bind(this);
+    this.onTouchEnd = this.onTouchEnd.bind(this);
     this.onPointerLeave = () => { this.previousPointer = null; };
     this.onVisibility = () => this.schedule();
     this.onResize = () => this.resize();
     stage.addEventListener('pointermove', this.onPointerMove, { passive: true });
-    stage.addEventListener('pointerdown', this.onPointerDown, { passive: true });
-    stage.addEventListener('pointerup', this.onPointerUp, { passive: true });
-    stage.addEventListener('pointercancel', this.onPointerCancel, { passive: true });
+    stage.addEventListener('touchstart', this.onTouchStart, { passive: true });
+    stage.addEventListener('touchmove', this.onTouchMove, { passive: true });
+    stage.addEventListener('touchend', this.onTouchEnd, { passive: true });
+    stage.addEventListener('touchcancel', this.onTouchEnd, { passive: true });
     stage.addEventListener('pointerleave', this.onPointerLeave, { passive: true });
     document.addEventListener('visibilitychange', this.onVisibility);
     this.resizeObserver = new ResizeObserver(this.onResize);
@@ -43,7 +43,7 @@ export class FireSimulation {
     this.schedule();
   }
 
-  setSettings(partial) { Object.assign(this.settings, partial); }
+  setSettings(settings) { this.settings = settings; }
   setEnabled(value) { this.enabled = value; this.schedule(); }
 
   resize() {
@@ -81,13 +81,7 @@ export class FireSimulation {
   }
 
   onPointerMove(event) {
-    if (event.pointerType === 'touch') {
-      if (this.touchStart && event.pointerId === this.touchStart.id &&
-          Math.hypot(event.clientX - this.touchStart.clientX, event.clientY - this.touchStart.clientY) > 12) {
-        this.touchStart = null;
-      }
-      return;
-    }
+    if (event.pointerType === 'touch') return;
     if (!this.enabled) return;
     const rect = this.stage.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width;
@@ -99,28 +93,48 @@ export class FireSimulation {
     const dx = x - previous.x;
     const dy = y - previous.y;
     if (Math.hypot(dx * rect.width, dy * rect.height) < 1) return;
-    this.splats.push({ x, y, dx: Math.max(-0.07, Math.min(0.07, dx)), dy: Math.max(-0.07, Math.min(0.07, dy)), intensity: 1 });
+    this.addSplat(x, y, dx, dy, 1);
+  }
+
+  addSplat(x, y, dx, dy, intensity) {
+    this.splats.push({ x, y, dx: Math.max(-0.07, Math.min(0.07, dx)),
+      dy: Math.max(-0.07, Math.min(0.07, dy)), intensity });
     if (this.splats.length > 12) this.splats.splice(0, this.splats.length - 12);
   }
 
-  onPointerDown(event) {
-    if (event.pointerType !== 'touch' || !this.enabled || !this.inView ||
+  onTouchStart(event) {
+    if (!this.enabled || !this.inView || this.activeTouch ||
         event.target?.closest?.('a, button, input, label, select, textarea, [data-fire-ignore]')) return;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
     const rect = this.stage.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = 1 - (event.clientY - rect.top) / rect.height;
+    const x = (touch.clientX - rect.left) / rect.width;
+    const y = 1 - (touch.clientY - rect.top) / rect.height;
     if (x < 0 || x > 1 || y < 0 || y > 1) return;
-    // Defer injection until release, so the start of a scrolling swipe stays inert.
-    this.touchStart = { x, y, clientX: event.clientX, clientY: event.clientY, id: event.pointerId, time: performance.now() };
+    this.activeTouch = { id: touch.identifier, clientX: touch.clientX, clientY: touch.clientY };
+    this.addSplat(x, y, 0, 0.05, 1.35);
   }
 
-  onPointerUp(event) {
-    const start = this.touchStart;
-    this.touchStart = null;
-    if (!start || !this.enabled || event.pointerId !== start.id || performance.now() - start.time > 450 ||
-        Math.hypot(event.clientX - start.clientX, event.clientY - start.clientY) > 12) return;
-    this.splats.push({ x: start.x, y: start.y, dx: 0, dy: 0.05, intensity: 1.5 });
-    if (this.splats.length > 12) this.splats.splice(0, this.splats.length - 12);
+  onTouchMove(event) {
+    const previous = this.activeTouch;
+    if (!previous || !this.enabled || !this.inView) return;
+    const touch = Array.from(event.changedTouches).find(item => item.identifier === previous.id);
+    if (!touch || Math.hypot(touch.clientX - previous.clientX, touch.clientY - previous.clientY) < 18) return;
+    const rect = this.stage.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / rect.width;
+    const y = 1 - (touch.clientY - rect.top) / rect.height;
+    this.activeTouch = { id: previous.id, clientX: touch.clientX, clientY: touch.clientY };
+    if (x < 0 || x > 1 || y < 0 || y > 1) return;
+    const dx = (touch.clientX - previous.clientX) / rect.width;
+    const dy = (previous.clientY - touch.clientY) / rect.height;
+    // Keep the heat lifting even when the finger swipes downward. No preventDefault.
+    this.addSplat(x, y, dx * 0.5, Math.max(0.02, 0.035 + dy * 0.4), 1.2);
+  }
+
+  onTouchEnd(event) {
+    if (this.activeTouch && Array.from(event.changedTouches).some(touch => touch.identifier === this.activeTouch.id)) {
+      this.activeTouch = null;
+    }
   }
 
   schedule() {
@@ -150,11 +164,15 @@ export class FireSimulation {
     const texel = [1 / this.width, 1 / this.height];
     const aspect = this.canvas.width / this.canvas.height;
     const s = this.settings;
+    const emitter = s.emitter;
+    const emitterCenter = [emitter.x, emitter.y];
+    const emitterRadius = [emitter.width / aspect, emitter.height];
 
     passes.draw('advect', velocity.write, { uDt: dt, uDecayX: 0.3, uDecayY: 0.3 },
       { uField: velocity.read.texture, uVelocity: velocity.read.texture });
     velocity.swap();
-    passes.draw('force', velocity.write, { uDt: dt, uRise: s.rise / 100, uTime: time },
+    passes.draw('force', velocity.write, { uDt: dt, uRise: s.rise / 100, uTime: time,
+      uEmitterCenter: emitterCenter, uEmitterRadius: emitterRadius },
       { uVelocity: velocity.read.texture, uMatter: matter.read.texture });
     velocity.swap();
 
@@ -187,7 +205,7 @@ export class FireSimulation {
       { uField: matter.read.texture, uVelocity: velocity.read.texture });
     matter.swap();
     passes.draw('source', matter.write,
-      { uDt: dt, uTime: time, uCenter: [0.52, 0.115], uRadius: [0.09 / aspect, 0.075], uValues: [2.8, 2.0], uIntensity: 1 },
+      { uDt: dt, uTime: time, uCenter: emitterCenter, uRadius: emitterRadius, uValues: [2.8, 2.0], uIntensity: emitter.power },
       { uField: matter.read.texture });
     matter.swap();
 
@@ -199,16 +217,18 @@ export class FireSimulation {
       matter.swap();
     }
 
-    passes.draw('display', null, { uGlow: s.glow / 80, uAspect: aspect, uTime: time }, { uMatter: matter.read.texture });
+    passes.draw('display', null, { uGlow: s.glow / 80, uAspect: aspect, uTime: time,
+      uEmitterCenter: emitterCenter }, { uMatter: matter.read.texture });
   }
 
   destroy() {
     this.enabled = false;
     this.schedule();
     this.stage.removeEventListener('pointermove', this.onPointerMove);
-    this.stage.removeEventListener('pointerdown', this.onPointerDown);
-    this.stage.removeEventListener('pointerup', this.onPointerUp);
-    this.stage.removeEventListener('pointercancel', this.onPointerCancel);
+    this.stage.removeEventListener('touchstart', this.onTouchStart);
+    this.stage.removeEventListener('touchmove', this.onTouchMove);
+    this.stage.removeEventListener('touchend', this.onTouchEnd);
+    this.stage.removeEventListener('touchcancel', this.onTouchEnd);
     this.stage.removeEventListener('pointerleave', this.onPointerLeave);
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.resizeObserver.disconnect();

@@ -1,9 +1,10 @@
-import { createFire } from './index.js';
+import { createFire, FIRE_PRESETS } from './index.js';
 
 const stage = document.querySelector('#stage');
 const canvas = document.querySelector('#fire');
 const status = document.querySelector('#status');
 const toggle = document.querySelector('#motion-toggle');
+const preset = document.querySelector('#preset');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 let simulation;
@@ -22,6 +23,7 @@ function start() {
       .map(input => [input.id, Number(input.value)]));
     simulation = createFire(canvas, {
       interactionTarget: stage,
+      preset: preset.value === 'custom' ? 'hearth' : preset.value,
       settings,
       autoplay: enabled,
       onStateChange(state, error) {
@@ -43,8 +45,18 @@ for (const input of document.querySelectorAll('.controls input')) {
   input.addEventListener('input', () => {
     document.querySelector(`#${input.id}-value`).value = input.value;
     simulation?.setSettings({ [input.id]: Number(input.value) });
+    preset.value = 'custom';
   });
 }
+
+preset.addEventListener('change', () => {
+  simulation?.setPreset(preset.value);
+  const settings = FIRE_PRESETS[preset.value];
+  for (const input of document.querySelectorAll('.controls input')) {
+    input.value = settings[input.id];
+    document.querySelector(`#${input.id}-value`).value = input.value;
+  }
+});
 
 toggle.addEventListener('click', () => {
   enabled = !enabled;

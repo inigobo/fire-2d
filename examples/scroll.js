@@ -22,6 +22,7 @@ function update() {
 try {
   fire = createFire(canvas, {
     interactionTarget: section,
+    preset: 'bonfire',
     autoplay: enabled,
     onStateChange(next, error) {
       state = next;

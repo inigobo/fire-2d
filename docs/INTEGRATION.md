@@ -12,7 +12,8 @@ The npm registry has **not** received a release yet. Pin a commit (`github:inigo
 
 ```html
 <div id="flame" style="position:relative; width:100%; height:500px">
-  <canvas id="flame-canvas" style="display:block; width:100%; height:100%" aria-hidden="true"></canvas>
+  <canvas id="flame-canvas" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none" aria-hidden="true"></canvas>
+  <h1 style="position:relative">Your page content</h1>
 </div>
 ```
 
@@ -24,18 +25,33 @@ let fire;
 try {
   fire = createFire(canvas, {
     interactionTarget: document.querySelector('#flame'),
-    settings: { rise: 55, curl: 42, glow: 64, trail: 58 },
+    preset: 'hearth',
+    settings: { glow: 55, emitter: { x: 0.65, width: 0.08, power: 1.2 } },
     autoplay: !matchMedia('(prefers-reduced-motion: reduce)').matches,
   });
 } catch (error) {
   canvas.hidden = true; // Place your own static fallback behind the canvas.
 }
 
-// Later: fire?.setSettings({ glow: 35 }); fire?.pause(); fire?.resume();
+// Later: fire?.setSettings({ glow: 35 }); fire?.setPreset('candle');
+// fire?.pause(); fire?.resume();
 // When this view is removed: fire?.destroy();
 ```
 
-The interaction target provides dimensions and receives desktop pointer movement and touch taps. It can contain other links and controls; interactive elements are ignored for touch pulses. The renderer does not capture pointer events or touch scrolling. The canvas only paints pixels. The host owns sizing, layout, text, static fallback, and reduced-motion policy. A [scrolling example](../examples/scroll.html) shows the renderer inside a longer page.
+The canvas is an absolutely positioned visual layer. Your HTML content sits above it; you do **not** include the playground control box in your website. The interaction target provides dimensions and receives desktop pointer movement and passive touch swipes. Links and controls still work; interactive elements are ignored for touch heat. The renderer never calls `preventDefault` or captures touch scrolling. The host owns sizing, layout, text, static fallback, and reduced-motion policy. A [scrolling example](../examples/scroll.html) shows the renderer inside a longer page.
+
+## Configuration
+
+Start with `preset: 'candle'`, `'hearth'` (default), or `'bonfire'`. `settings` overrides any subset. The exported `FIRE_PRESETS` object lists their values. For example, a narrow flame on the right can use `preset: 'candle'` and `settings: { emitter: { x: 0.75, power: 1.1 }, glow: 50 }`.
+
+| Setting | Range | Effect |
+| --- | --- | --- |
+| `rise`, `curl`, `glow`, `trail` | 0–100 | Lift, swirl, halo, and visible trail persistence. |
+| `emitter.x`, `emitter.y` | 0–1 | Base position from the left and bottom of the canvas. |
+| `emitter.width`, `emitter.height` | 0.01–0.4 | Source dimensions relative to canvas height. |
+| `emitter.power` | 0–3 | Heat and visible density emitted per second. |
+
+Values outside these ranges are clamped. Unknown names and non-finite numbers throw. `setSettings` merges a partial override; `setPreset` replaces all current settings with a named preset. `getSettings()` returns an independent snapshot.
 
 ## React or Next.js client component
 
@@ -57,6 +73,8 @@ export function FireBackground() {
       try {
         fire = createFire(canvas.current, {
           interactionTarget: host.current,
+          preset: 'hearth',
+          settings: { emitter: { x: 0.62, width: 0.08 }, glow: 55 },
           autoplay: !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
         });
       } catch (error) {
@@ -66,13 +84,20 @@ export function FireBackground() {
     return () => { disposed = true; fire?.destroy(); };
   }, []);
 
-  return <div ref={host} className="fire-host">
+  return <section ref={host} className="fire-host">
     <canvas ref={canvas} className="fire-canvas" aria-hidden="true" />
-  </div>;
+    <div className="fire-content"><h1>Your hero content</h1></div>
+  </section>;
 }
 ```
 
-Give `.fire-host` a nonzero size and position the canvas to fill it. Put a CSS still image/gradient behind the canvas. For richer reduced-motion behaviour, listen to preference changes and call `pause()` or `resume()` as the standalone demo does.
+```css
+.fire-host { position: relative; min-height: 80svh; overflow: hidden; background: radial-gradient(#44201a, #100d12 65%); }
+.fire-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.fire-content { position: relative; z-index: 1; }
+```
+
+The section scrolls with the page. The package stops animation when it is offscreen and resumes when it returns. Give `.fire-host` a nonzero size and put a CSS still image/gradient behind the canvas. For richer reduced-motion behaviour, listen to preference changes and call `pause()` or `resume()` as the standalone demo does. The React component renders **no simulator controls**.
 
 ## Controller
 
@@ -80,7 +105,9 @@ Give `.fire-host` a nonzero size and position the canvas to fill it. Put a CSS s
 
 | Method | Purpose |
 | --- | --- |
-| `setSettings({ rise, curl, glow, trail })` | Update any subset; finite numbers are clamped to 0–100. |
+| `setSettings({ rise, curl, glow, trail, emitter })` | Merge validated settings and emitter fields. |
+| `setPreset('candle' \| 'hearth' \| 'bonfire')` | Replace settings with a named look. |
+| `getSettings()` | Read a snapshot of the current configuration. |
 | `pause()` / `resume()` | Stop or restart animation work. |
 | `resize()` | Explicit resize if needed; an observer already handles normal element resizing. |
 | `destroy()` | Cancel animation, remove listeners/observers, and release GPU resources. Safe to call twice. |

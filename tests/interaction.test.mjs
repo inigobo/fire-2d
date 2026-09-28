@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FireSimulation } from '../src/graphics/fire-simulation.js';
+import { FIRE_PRESETS, mergeSettings, settingsForPreset } from '../src/config.js';
 
 function inputHarness() {
   return {
@@ -9,39 +10,58 @@ function inputHarness() {
     inView: true,
     splats: [],
     previousPointer: null,
+    activeTouch: null,
+    addSplat: FireSimulation.prototype.addSplat,
   };
 }
 
-test('touch contact injects one pulse without intercepting scroll movement', () => {
+test('touch scrolling adds spaced heat pulses without intercepting the page', () => {
   const simulation = inputHarness();
-  const event = {
-    pointerType: 'touch', pointerId: 1, clientX: 110, clientY: 220,
+  const start = {
+    changedTouches: [{ identifier: 1, clientX: 110, clientY: 220 }],
     target: { closest: () => null },
     preventDefault: () => { throw new Error('Touch scrolling was intercepted'); },
   };
-  FireSimulation.prototype.onPointerDown.call(simulation, event);
-  FireSimulation.prototype.onPointerUp.call(simulation, event);
-  assert.equal(simulation.splats.length, 1);
+  FireSimulation.prototype.onTouchStart.call(simulation, start);
+  FireSimulation.prototype.onTouchMove.call(simulation, { ...start, changedTouches: [{ identifier: 1, clientX: 110, clientY: 211 }] });
+  assert.equal(simulation.splats.length, 1); // Tiny movement is skipped.
+  FireSimulation.prototype.onTouchMove.call(simulation, { ...start, changedTouches: [{ identifier: 1, clientX: 110, clientY: 170 }] });
+  assert.equal(simulation.splats.length, 2);
   assert.deepEqual([simulation.splats[0].x, simulation.splats[0].y], [0.5, 0.5]);
-  assert.ok(simulation.splats[0].dy > 0);
+  assert.ok(simulation.splats[1].dy > 0);
 });
 
-test('a scrolling swipe does not inject a pulse', () => {
+test('downward swipe still lifts heat, then touch end stops injection', () => {
   const simulation = inputHarness();
-  const start = { pointerType: 'touch', pointerId: 2, clientX: 110, clientY: 220, target: { closest: () => null } };
-  FireSimulation.prototype.onPointerDown.call(simulation, start);
-  FireSimulation.prototype.onPointerMove.call(simulation, { ...start, clientY: 170 });
-  FireSimulation.prototype.onPointerUp.call(simulation, { ...start, clientY: 170 });
-  assert.equal(simulation.splats.length, 0);
+  const start = { changedTouches: [{ identifier: 2, clientX: 110, clientY: 220 }], target: { closest: () => null } };
+  FireSimulation.prototype.onTouchStart.call(simulation, start);
+  FireSimulation.prototype.onTouchMove.call(simulation, { changedTouches: [{ identifier: 2, clientX: 110, clientY: 270 }] });
+  assert.equal(simulation.splats.length, 2);
+  assert.ok(simulation.splats[1].dy > 0);
+  FireSimulation.prototype.onTouchEnd.call(simulation, { changedTouches: [{ identifier: 2 }] });
+  FireSimulation.prototype.onTouchMove.call(simulation, { changedTouches: [{ identifier: 2, clientX: 110, clientY: 320 }] });
+  assert.equal(simulation.splats.length, 2);
 });
 
 test('touching a control does not inject heat', () => {
   const simulation = inputHarness();
-  FireSimulation.prototype.onPointerDown.call(simulation, {
-    pointerType: 'touch', clientX: 110, clientY: 220,
+  FireSimulation.prototype.onTouchStart.call(simulation, {
+    changedTouches: [{ identifier: 3, clientX: 110, clientY: 220 }],
     target: { closest: () => ({ tagName: 'BUTTON' }) },
   });
   assert.equal(simulation.splats.length, 0);
+});
+
+test('presets merge overrides without changing their frozen source', () => {
+  const settings = settingsForPreset('candle', { glow: 130, emitter: { x: 0.75 } });
+  assert.equal(settings.glow, 100);
+  assert.equal(settings.emitter.x, 0.75);
+  assert.equal(FIRE_PRESETS.candle.emitter.x, 0.52);
+  const next = mergeSettings(settings, { emitter: { power: 1.2 } });
+  assert.equal(next.emitter.x, 0.75);
+  assert.equal(next.emitter.power, 1.2);
+  assert.throws(() => settingsForPreset('unknown'), RangeError);
+  assert.throws(() => mergeSettings(next, { emitter: { foo: 1 } }), TypeError);
 });
 
 test('offscreen simulation cancels its frame and resets elapsed time', t => {

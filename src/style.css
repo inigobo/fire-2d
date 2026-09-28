@@ -29,6 +29,8 @@ h1 em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; lette
 .controls-heading { display: flex; justify-content: space-between; margin-bottom: 24px; color: #f5d1bb; }
 .controls-index { color: #9f8178; }
 .controls label { display: grid; grid-template-columns: 48px 1fr 28px; align-items: center; gap: 9px; margin: 15px 0; font-size: 11px; color: #dac0b5; }
+.controls .preset-label { grid-template-columns: 48px 1fr; }
+.preset-label select { width: 100%; border: 1px solid rgba(255,221,194,.2); border-radius: 2px; background: #241a1a; color: #f5d1bb; padding: 6px 8px; font: inherit; font-size: 12px; }
 .controls output { text-align: right; color: #9f8178; font-variant-numeric: tabular-nums; }
 input[type=range] { width: 100%; accent-color: #ed754c; cursor: pointer; height: 18px; }
 .motion-toggle { display: flex; justify-content: space-between; width: 100%; border: 0; border-top: 1px solid rgba(255,221,194,.14); padding: 16px 0 0; margin-top: 18px; background: none; color: #f5d1bb; font: inherit; font-size: 11px; cursor: pointer; }

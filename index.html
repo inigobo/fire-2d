@@ -22,11 +22,12 @@
       <div class="hero-copy">
         <p class="eyebrow"><span class="live-dot"></span> An interactive fluid experiment</p>
         <h1>Give the<br /><em>fire</em> a little<br />air.</h1>
-        <p class="intro"><span class="pointer-instruction">Move your pointer to stir the flame.</span><span class="touch-instruction">Tap to stir the flame.</span></p>
+        <p class="intro"><span class="pointer-instruction">Move your pointer to stir the flame.</span><span class="touch-instruction">Touch to stir the flame.</span></p>
       </div>
 
       <aside class="controls" aria-label="Fire controls">
-        <div class="controls-heading"><span>Shape the fire</span><span class="controls-index">01 / 04</span></div>
+        <div class="controls-heading"><span>Shape the fire</span><span class="controls-index">01 / 05</span></div>
+        <label class="preset-label"><span>Preset</span><select id="preset" aria-label="Fire preset"><option value="candle">Candle</option><option value="hearth" selected>Hearth</option><option value="bonfire">Bonfire</option><option value="custom" disabled>Custom</option></select></label>
         <label><span>Rise</span><input id="rise" type="range" min="0" max="100" value="55" /><output for="rise" id="rise-value">55</output></label>
         <label><span>Curl</span><input id="curl" type="range" min="0" max="100" value="42" /><output for="curl" id="curl-value">42</output></label>
         <label><span>Glow</span><input id="glow" type="range" min="0" max="100" value="64" /><output for="glow" id="glow-value">64</output></label>

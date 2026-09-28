@@ -37,7 +37,7 @@ The timestep is capped at 33 ms. The solver targets responsive visual motion rat
 - New, hot material: pale amber or white core. Cooling material: saturated warm red and a faint darker edge. Palette should be configurable by the host.
 - Preserve dark negative space around type. Bloom should suggest light without washing out controls.
 - Desktop pointer affects a local radius and adds momentum proportional to movement; do not replace the native cursor or block links.
-- Touch does not capture scrolling. A short stationary tap adds one heat and momentum pulse; a moving or cancelled touch does not. The autonomous emitter continues without input.
+- Touch does not capture scrolling. Passive touch events add an initial pulse and spaced heat/momentum splats along a swipe; native scrolling continues. The autonomous emitter continues without input.
 - The host controls `start`, `pause`, `resume`, `resize`, and `destroy`, and receives a static fallback when WebGL is unavailable or reduced motion is preferred.
 
 ## Performance targets to measure

@@ -1,20 +1,7 @@
 import { FireSimulation } from './graphics/fire-simulation.js';
+import { mergeSettings, settingsForPreset } from './config.js';
 
-const KNOBS = new Set(['rise', 'curl', 'glow', 'trail']);
-
-function settingsFrom(values) {
-  if (!values || typeof values !== 'object' || Array.isArray(values)) {
-    throw new TypeError('Fire settings must be an object');
-  }
-  const settings = {};
-  for (const [key, value] of Object.entries(values)) {
-    if (!KNOBS.has(key) || !Number.isFinite(value)) {
-      throw new TypeError(`Invalid fire setting: ${key}`);
-    }
-    settings[key] = Math.max(0, Math.min(100, value));
-  }
-  return settings;
-}
+export { FIRE_PRESETS } from './config.js';
 
 /** Create one fire simulation for a canvas. The caller owns the canvas and fallback UI. */
 export function createFire(canvas, options = {}) {
@@ -28,7 +15,7 @@ export function createFire(canvas, options = {}) {
   const onStateChange = options.onStateChange ?? (() => {});
   if (typeof onStateChange !== 'function') throw new TypeError('onStateChange must be a function');
 
-  let settings = settingsFrom(options.settings ?? {});
+  let settings = settingsForPreset(options.preset, options.settings);
   let enabled = options.autoplay !== false;
   let simulation;
   let destroyed = false;
@@ -66,10 +53,15 @@ export function createFire(canvas, options = {}) {
   return {
     setSettings(partial) {
       if (destroyed) return;
-      const values = settingsFrom(partial);
-      settings = { ...settings, ...values };
-      simulation?.setSettings(values);
+      settings = mergeSettings(settings, partial);
+      simulation?.setSettings(settings);
     },
+    setPreset(name) {
+      if (destroyed) return;
+      settings = settingsForPreset(name);
+      simulation?.setSettings(settings);
+    },
+    getSettings() { return mergeSettings(settings, {}); },
     pause() {
       if (destroyed) return;
       enabled = false;

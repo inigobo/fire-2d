@@ -63,10 +63,12 @@ void main() {
   force: head + `
 uniform sampler2D uVelocity, uMatter;
 uniform float uDt, uRise, uTime;
+uniform vec2 uEmitterCenter, uEmitterRadius;
 void main() {
   vec2 velocity = texture(uVelocity, vUv).xy;
   vec2 matter = texture(uMatter, vUv).xy;
-  float core = exp(-pow((vUv.x - 0.5) / 0.12, 2.0) - pow((vUv.y - 0.08) / 0.09, 2.0));
+  float core = exp(-pow((vUv.x - uEmitterCenter.x) / (uEmitterRadius.x * 1.3), 2.0) -
+                   pow((vUv.y - uEmitterCenter.y) / (uEmitterRadius.y * 1.2), 2.0));
   float wave = sin(vUv.y * 31.0 + uTime * 2.4) * sin(vUv.x * 19.0 - uTime * 1.3);
   vec2 acceleration = vec2(wave * 0.006 * matter.x, (0.06 + uRise * 0.35) * matter.x + core * 0.18);
   outColor = vec4(velocity + acceleration * uDt, 0.0, 0.0);
@@ -144,6 +146,7 @@ void main() {
   display: head + sampling + `
 uniform sampler2D uMatter;
 uniform float uGlow, uAspect, uTime;
+uniform vec2 uEmitterCenter;
 
 vec3 flame(vec2 m) {
   float heat = clamp(m.x, 0.0, 1.8);
@@ -176,10 +179,11 @@ void main() {
   halo += sampleField(uMatter, uv + vec2(broad.x, -broad.y)).y;
   halo += sampleField(uMatter, uv + vec2(-broad.x, broad.y)).y;
   halo = min(1.0, halo * 0.12) * uGlow;
-  float ambient = exp(-pow((uv.x - 0.56) * uAspect * 1.1, 2.0) - pow((uv.y - 0.1) * 1.8, 2.0));
+  float ambient = exp(-pow((uv.x - uEmitterCenter.x) * uAspect * 1.1, 2.0) -
+                      pow((uv.y - uEmitterCenter.y) * 1.8, 2.0));
   // Rising bands of low-contrast light suggest heat above the emitter.
   float shimmer = sin(uv.y * 39.0 - uTime * 3.4 + sin(uv.x * 17.0 + uTime) * 1.6);
-  float heatHaze = exp(-pow((uv.x - 0.52) * uAspect * 2.5, 2.0)) *
+  float heatHaze = exp(-pow((uv.x - uEmitterCenter.x) * uAspect * 2.5, 2.0)) *
                    smoothstep(0.05, 0.4, uv.y) * (1.0 - smoothstep(0.75, 1.0, uv.y));
   vec3 background = vec3(0.026, 0.019, 0.027) + ambient * vec3(0.026, 0.003, 0.002);
   background += heatHaze * (0.5 + 0.5 * shimmer) * vec3(0.010, 0.003, 0.001);

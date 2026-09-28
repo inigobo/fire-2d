@@ -4,7 +4,7 @@ A small, interactive fire and fluid experiment for the browser. It uses a low-re
 
 **[Live demo](https://fire-2d-simulator.inniber.chatgpt.site)** · [Simulation notes](docs/SIMULATION.md) · [References](docs/REFERENCES.md) · [Provenance](docs/PROVENANCE.md)
 
-The [scroll test](https://fire-2d-simulator.inniber.chatgpt.site/examples/scroll.html) places the same renderer between page sections. It shows how the canvas scrolls with its section and pauses offscreen. On touch screens, a tap adds a small heat pulse while swipes keep normal page scrolling.
+The [scroll test](https://fire-2d-simulator.inniber.chatgpt.site/examples/scroll.html) places the same renderer between page sections. It shows how the canvas scrolls with its section and pauses offscreen. On touch screens, swiping through the flame adds heat while native page scrolling continues.
 
 ## Use it on another website
 
@@ -14,7 +14,7 @@ The browser renderer now has a small package entry point. It can be installed fr
 npm install github:inigobo/fire-2d
 ```
 
-Import `createFire` from `@inigobo/fire-2d`, pass your canvas, and call `destroy()` when the page removes it. The demo itself imports the same entry point. See [integration examples](docs/INTEGRATION.md) for plain JavaScript and React/Next.js, settings, fallbacks, and lifecycle details.
+Import `createFire` from `@inigobo/fire-2d`, pass your canvas, choose `candle`, `hearth`, or `bonfire`, and call `destroy()` when the page removes it. Override the preset with settings, including emitter position, size, and power. The demo itself imports the same entry point; its controls are page UI and are not part of the package. See [integration examples](docs/INTEGRATION.md) for plain JavaScript and React/Next.js, settings, fallbacks, and lifecycle details.
 
 The package is **not yet published to the npm registry**. A GitHub install resolves to a commit in your lockfile; use a specific commit hash when you need reproducible installations across projects. The `@inigobo` npm scope requires ownership of the matching npm account before a registry release.
 
