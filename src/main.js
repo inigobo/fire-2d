@@ -1,4 +1,4 @@
-import { FireSimulation } from './graphics/fire-simulation.js';
+import { createFire } from './index.js';
 
 const stage = document.querySelector('#stage');
 const canvas = document.querySelector('#fire');
@@ -18,12 +18,19 @@ function updateToggle() {
 function start() {
   if (simulation) return;
   try {
-    simulation = new FireSimulation(canvas, stage, setStatus);
-    simulation.setEnabled(enabled);
-    for (const input of document.querySelectorAll('.controls input')) {
-      simulation.setSettings({ [input.id]: Number(input.value) });
-    }
-    if (!enabled) setStatus('Motion paused — static composition');
+    const settings = Object.fromEntries([...document.querySelectorAll('.controls input')]
+      .map(input => [input.id, Number(input.value)]));
+    simulation = createFire(canvas, {
+      interactionTarget: stage,
+      settings,
+      autoplay: enabled,
+      onStateChange(state, error) {
+        canvas.hidden = state === 'context-lost' || state === 'unavailable';
+        if (state === 'unavailable') console.warn('Fire renderer unavailable:', error);
+        setStatus({ running: 'Simulation running', paused: 'Motion paused',
+          'context-lost': 'Graphics context lost — static fire', unavailable: 'Static fire — WebGL unavailable' }[state]);
+      },
+    });
   } catch (error) {
     console.warn('Fire renderer unavailable:', error);
     canvas.hidden = true;
@@ -42,29 +49,18 @@ for (const input of document.querySelectorAll('.controls input')) {
 toggle.addEventListener('click', () => {
   enabled = !enabled;
   if (enabled && !simulation) start();
-  simulation?.setEnabled(enabled);
-  setStatus(enabled ? 'Simulation running' : 'Motion paused');
+  if (enabled) simulation?.resume();
+  else simulation?.pause();
   updateToggle();
 });
 
 reducedMotion.addEventListener('change', event => {
   enabled = !event.matches;
   if (enabled && !simulation) start();
-  simulation?.setEnabled(enabled);
+  if (enabled) simulation?.resume();
+  else simulation?.pause();
   updateToggle();
-  setStatus(enabled ? 'Simulation running' : 'Motion paused for reduced motion');
-});
-
-canvas.addEventListener('webglcontextlost', event => {
-  event.preventDefault();
-  simulation?.destroy();
-  simulation = undefined;
-  canvas.hidden = true;
-  setStatus('Graphics context lost — static fire');
-});
-canvas.addEventListener('webglcontextrestored', () => {
-  canvas.hidden = false;
-  start();
+  if (!enabled) setStatus('Motion paused for reduced motion');
 });
 
 updateToggle();

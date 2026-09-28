@@ -2,6 +2,8 @@
 
 Each milestone should leave a working demo and a short note on what was learned. Keep the renderer independent of the Akelarre application until the visual behaviour is proven.
 
+**Current prototype:** the standalone demo implements the heated-dye solver and display treatment. A framework-independent `createFire` controller and installable GitHub package are available; npm registry publishing, device measurements, and host-site integration remain ahead.
+
 ## 0. Baseline and measurements
 
 - Set up a small TypeScript + WebGL playground with resize, context-loss handling, and a visible static fallback.
@@ -28,7 +30,7 @@ Each milestone should leave a working demo and a short note on what was learned.
 
 ## 4. Embeddable renderer
 
-- Provide a small lifecycle API and documented parameters. Remove research-only controls from the production build.
+- Provide a small lifecycle API and documented parameters. The current package export excludes the demo controls; continue refining it with a host integration.
 - Implement reduced-motion, unsupported-WebGL, offscreen, and low-power behaviour.
 - Package or pin a version that the Akelarre site can consume; retain a standalone demo for the portfolio.
 

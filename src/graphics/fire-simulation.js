@@ -4,16 +4,15 @@ import { shaders } from './shaders.js';
 const DEFAULTS = { rise: 55, curl: 42, glow: 64, trail: 58 };
 
 export class FireSimulation {
-  constructor(canvas, stage, onStatus = () => {}) {
+  constructor(canvas, stage, settings = {}, autoplay = true) {
     this.canvas = canvas;
     this.stage = stage;
-    this.onStatus = onStatus;
     this.gl = createContext(canvas);
     this.passes = new Passes(this.gl, shaders);
-    this.settings = { ...DEFAULTS };
+    this.settings = { ...DEFAULTS, ...settings };
     this.splats = [];
     this.previousPointer = null;
-    this.enabled = true;
+    this.enabled = autoplay;
     this.inView = true;
     this.frame = 0;
     this.lastTime = 0;
@@ -35,7 +34,6 @@ export class FireSimulation {
     this.intersectionObserver.observe(stage);
     this.resize();
     this.schedule();
-    onStatus('Simulation running');
   }
 
   setSettings(partial) { Object.assign(this.settings, partial); }

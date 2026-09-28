@@ -4,6 +4,18 @@ A small, interactive fire and fluid experiment for the browser. It uses a low-re
 
 **[Live demo](https://fire-2d-simulator.inniber.chatgpt.site)** · [Simulation notes](docs/SIMULATION.md) · [References](docs/REFERENCES.md) · [Provenance](docs/PROVENANCE.md)
 
+## Use it on another website
+
+The browser renderer now has a small package entry point. It can be installed from GitHub without copying source files:
+
+```sh
+npm install github:inigobo/fire-2d
+```
+
+Import `createFire` from `@inigobo/fire-2d`, pass your canvas, and call `destroy()` when the page removes it. The demo itself imports the same entry point. See [integration examples](docs/INTEGRATION.md) for plain JavaScript and React/Next.js, settings, fallbacks, and lifecycle details.
+
+The package is **not yet published to the npm registry**. A GitHub install resolves to a commit in your lockfile; use a specific commit hash when you need reproducible installations across projects. The `@inigobo` npm scope requires ownership of the matching npm account before a registry release.
+
 ## Run locally
 
 Node 20.11+ is sufficient. There are no runtime dependencies and no build step.
@@ -30,7 +42,7 @@ See [simulation notes](docs/SIMULATION.md) for the equations and implementation 
 
 The field's longest side is capped at 256 cells on desktop and 176 on narrower screens. The canvas pixel ratio is capped at 1.5 or 1.25. A frame runs a fixed number of small GPU passes and processes at most four pointer events. Animation pauses when the page is hidden or the stage leaves view; elapsed time is capped on resume. Touch scrolling stays native. Reduced-motion visitors see a CSS static composition and can opt into motion. The page also falls back when WebGL2 or float render targets are unavailable.
 
-This is a first visual prototype. Quality and speed still need measurements on real phones and integrated page layouts. Packaging for other sites is a future step; the renderer is independent of React.
+This is a first visual prototype. Quality and speed still need measurements on real phones and integrated page layouts. The package API is framework independent and can be consumed by React or plain JavaScript.
 
 ## Credits and license
 
