@@ -14,9 +14,11 @@ The browser renderer has a small package entry point. Install it without copying
 npm install @inigobo/fire-2d
 ```
 
-Import `createFire` from `@inigobo/fire-2d`, pass your canvas, choose `candle`, `hearth`, or `bonfire`, and call `destroy()` when the page removes it. Override the preset with settings, including emitter position, size, and power. The demo itself imports the same entry point; its controls are page UI and are not part of the package. See [integration examples](docs/INTEGRATION.md) for plain JavaScript and React/Next.js, settings, fallbacks, and lifecycle details.
+Import `createFire` from `@inigobo/fire-2d`, pass your canvas, choose `candle`, `hearth`, or `bonfire`, set `settings: { startupPulses: 8 }` for a scattered opening burst, and call `destroy()` when the page removes it. Override the preset with settings, including emitter position, size, and power. The demo itself imports the same entry point; its controls are page UI and are not part of the package. See [integration examples](docs/INTEGRATION.md) for plain JavaScript and React/Next.js, settings, fallbacks, and lifecycle details.
 
 The public GitHub source can also be installed with `npm install github:inigobo/fire-2d#<commit-sha>` when a specific source revision is needed. npm records the installed version in your lockfile.
+
+Call `fire.burst()` to replay the opening pulses. Set `startupPulses: 0` for a quiet start. The demo has a pulse-count slider and replay button.
 
 ## Run locally
 

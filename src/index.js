@@ -61,6 +61,10 @@ export function createFire(canvas, options = {}) {
       settings = settingsForPreset(name);
       simulation?.setSettings(settings);
     },
+    /** Queue a fresh random heat burst; replacement prevents an unbounded backlog. */
+    burst(count = settings.startupPulses) {
+      if (!destroyed) simulation?.burst(count);
+    },
     getSettings() { return mergeSettings(settings, {}); },
     pause() {
       if (destroyed) return;

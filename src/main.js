@@ -58,6 +58,8 @@ preset.addEventListener('change', () => {
   }
 });
 
+document.querySelector('#pulse-burst').addEventListener('click', () => simulation?.burst());
+
 toggle.addEventListener('click', () => {
   enabled = !enabled;
   if (enabled && !simulation) start();

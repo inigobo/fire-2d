@@ -40,12 +40,21 @@ try {
 
 The canvas is an absolutely positioned visual layer. Your HTML content sits above it; you do **not** include the playground control box in your website. The interaction target provides dimensions and receives desktop pointer movement and passive touch swipes. Links and controls still work; interactive elements are ignored for touch heat. The renderer never calls `preventDefault` or captures touch scrolling. The host owns sizing, layout, text, static fallback, and reduced-motion policy. A [scrolling example](../examples/scroll.html) shows the renderer inside a longer page.
 
+## Startup pulses
+
+`settings: { startupPulses: 8 }` seeds scattered heat and upward momentum when animation first runs. Set it to `0` for a quiet start. Counts are rounded and clamped to 0–24. Candle defaults to 0, hearth to 8, and bonfire to 12.
+
+Pulses enter the existing heat and velocity fields as Gaussian impulses. They rise, curl, and fade with the solver; they are not an overlay. At most four input/pulse impulses are processed per frame. Paused simulations wait until resumed. Scrolling back into view, changing presets, and resizing do not trigger another burst. A restored WebGL context starts fresh, including startup pulses.
+
+Call `fire.burst()` to replay the configured count or `fire.burst(12)` for a specific count. Changing `startupPulses` updates future bursts without immediately injecting heat. Repeated calls replace the pending burst instead of accumulating work.
+
 ## Configuration
 
 Start with `preset: 'candle'`, `'hearth'` (default), or `'bonfire'`. `settings` overrides any subset. The exported `FIRE_PRESETS` object lists their values. For example, a narrow flame on the right can use `preset: 'candle'` and `settings: { emitter: { x: 0.75, power: 1.1 }, glow: 50 }`.
 
 | Setting | Range | Effect |
 | --- | --- | --- |
+| `startupPulses` | 0–24 | Number of random heat impulses on startup and default replay count. |
 | `rise`, `curl`, `glow`, `trail` | 0–100 | Lift, swirl, halo, and visible trail persistence. |
 | `emitter.x`, `emitter.y` | 0–1 | Base position from the left and bottom of the canvas. |
 | `emitter.width`, `emitter.height` | 0.01–0.4 | Source dimensions relative to canvas height. |
@@ -108,6 +117,7 @@ The section scrolls with the page. The package stops animation when it is offscr
 | `setSettings({ rise, curl, glow, trail, emitter })` | Merge validated settings and emitter fields. |
 | `setPreset('candle' \| 'hearth' \| 'bonfire')` | Replace settings with a named look. |
 | `getSettings()` | Read a snapshot of the current configuration. |
+| `burst(count?)` | Queue random heat and upward momentum pulses. |
 | `pause()` / `resume()` | Stop or restart animation work. |
 | `resize()` | Explicit resize if needed; an observer already handles normal element resizing. |
 | `destroy()` | Cancel animation, remove listeners/observers, and release GPU resources. Safe to call twice. |

@@ -26,12 +26,14 @@
       </div>
 
       <aside class="controls" aria-label="Fire controls">
-        <div class="controls-heading"><span>Shape the fire</span><span class="controls-index">01 / 05</span></div>
+        <div class="controls-heading"><span>Shape the fire</span><span class="controls-index">01 / 06</span></div>
         <label class="preset-label"><span>Preset</span><select id="preset" aria-label="Fire preset"><option value="candle">Candle</option><option value="hearth" selected>Hearth</option><option value="bonfire">Bonfire</option><option value="custom" disabled>Custom</option></select></label>
         <label><span>Rise</span><input id="rise" type="range" min="0" max="100" value="55" /><output for="rise" id="rise-value">55</output></label>
         <label><span>Curl</span><input id="curl" type="range" min="0" max="100" value="42" /><output for="curl" id="curl-value">42</output></label>
         <label><span>Glow</span><input id="glow" type="range" min="0" max="100" value="64" /><output for="glow" id="glow-value">64</output></label>
         <label><span>Trail</span><input id="trail" type="range" min="0" max="100" value="58" /><output for="trail" id="trail-value">58</output></label>
+        <label><span>Start pulses</span><input id="startupPulses" type="range" min="0" max="24" step="1" value="8" /><output for="startupPulses" id="startupPulses-value">8</output></label>
+        <button type="button" id="pulse-burst" class="motion-toggle">Replay pulses <span aria-hidden="true">↻</span></button>
         <button type="button" id="motion-toggle" class="motion-toggle">Pause motion <span aria-hidden="true">Ⅱ</span></button>
       </aside>
 

@@ -1,6 +1,6 @@
 {
   "name": "@inigobo/fire-2d",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Interactive 2D WebGL fire simulation for browser canvases",
   "license": "MIT",
   "repository": {
@@ -21,7 +21,7 @@
   "sideEffects": false,
   "scripts": {
     "dev": "node tools/dev-server.mjs",
-    "check": "node --check src/main.js && node --check src/index.js && node --check src/config.js && node --check src/graphics/gl.js && node --check src/graphics/shaders.js && node --check src/graphics/fire-simulation.js && node --check examples/scroll.js",
+    "check": "node --check src/main.js && node --check src/index.js && node --check src/config.js && node --check src/graphics/pulses.js && node --check src/graphics/gl.js && node --check src/graphics/shaders.js && node --check src/graphics/fire-simulation.js && node --check examples/scroll.js",
     "test": "node --test tests/*.test.mjs",
     "pack:check": "npm pack --dry-run"
   }

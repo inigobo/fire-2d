@@ -1,6 +1,7 @@
 import { createContext, createPair, createTarget, destroyPair, destroyTarget, Passes } from './gl.js';
 import { shaders } from './shaders.js';
 import { settingsForPreset } from '../config.js';
+import { createPulses } from './pulses.js';
 
 export class FireSimulation {
   constructor(canvas, stage, settings = settingsForPreset(), autoplay = true) {
@@ -10,6 +11,7 @@ export class FireSimulation {
     this.passes = new Passes(this.gl, shaders);
     this.settings = settings;
     this.splats = [];
+    this.pulses = createPulses(settings.startupPulses);
     this.previousPointer = null;
     this.activeTouch = null;
     this.enabled = autoplay;
@@ -49,6 +51,8 @@ export class FireSimulation {
       throw error;
     }
   }
+
+  burst(count = this.settings.startupPulses) { this.pulses = createPulses(count); }
 
   setSettings(settings) { this.settings = settings; }
   setEnabled(value) { this.enabled = value; this.schedule(); }
@@ -190,9 +194,10 @@ export class FireSimulation {
 
     // A bounded number of splats keeps fast pointer events from stalling a frame.
     const splats = this.splats.splice(0, 4);
+    splats.push(...this.pulses.splice(0, 4 - splats.length));
     for (const splat of splats) {
       passes.draw('splat', velocity.write,
-        { uPoint: [splat.x, splat.y], uValue: [splat.dx * 2.4, splat.dy * 2.4], uRadius: 0.035, uAspect: aspect },
+        { uPoint: [splat.x, splat.y], uValue: [splat.dx * 2.4, splat.dy * 2.4], uRadius: splat.radius ?? 0.035, uAspect: aspect },
         { uField: velocity.read.texture });
       velocity.swap();
     }
@@ -219,7 +224,7 @@ export class FireSimulation {
     // The same bounded input batch perturbs motion and leaves a heated trail.
     for (const splat of splats) {
       passes.draw('splat', matter.write,
-        { uPoint: [splat.x, splat.y], uValue: [0.48 * splat.intensity, 0.35 * splat.intensity], uRadius: 0.032, uAspect: aspect },
+        { uPoint: [splat.x, splat.y], uValue: [0.48 * splat.intensity, 0.35 * splat.intensity], uRadius: splat.radius ?? 0.032, uAspect: aspect },
         { uField: matter.read.texture });
       matter.swap();
     }

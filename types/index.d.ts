@@ -20,6 +20,8 @@ export type FireSettings = {
   glow?: number;
   /** Visible density persistence, from 0 to 100. */
   trail?: number;
+  /** One-time random heat pulses on first animation, rounded and clamped to 0–24. */
+  startupPulses?: number;
   emitter?: FireEmitter;
 };
 
@@ -46,6 +48,8 @@ export type FireController = {
   setPreset(preset: FirePreset): void;
   /** Return an independent snapshot of the active configuration. */
   getSettings(): Required<Omit<FireSettings, 'emitter'>> & { emitter: Required<FireEmitter> };
+  /** Replay random pulses. Defaults to startupPulses; replaces any pending burst. */
+  burst(count?: number): void;
   pause(): void;
   resume(): void;
   resize(): void;
