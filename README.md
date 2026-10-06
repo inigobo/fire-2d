@@ -20,6 +20,13 @@ The public GitHub source can also be installed with `npm install github:inigobo/
 
 Call `fire.burst()` to replay the opening pulses. Set `startupPulses: 0` for a quiet start. The demo has a pulse-count slider and replay button.
 
+For slower, longer-lived pointer-only flames, try
+`settings: { emitter: { power: 0 }, rise: 24, cooling: 12, damping: 30, trail: 88 }`.
+Turning off emission now also turns off the emitter's base jet and animated heat
+haze. Lower cooling retains heat; higher damping slows existing velocity. Damping
+is simple drag, not a physical viscosity solver. Defaults retain the earlier
+cooling and velocity-decay rates.
+
 ## Run locally
 
 Node 20.11+ is sufficient. There are no runtime dependencies and no build step.
@@ -29,6 +36,12 @@ npm run dev
 ```
 
 Open `http://localhost:5173`. Run `npm run check` for JavaScript syntax checks. The repository includes a GitHub Pages workflow for hosting the same static files. To activate that public URL, the repository owner must enable Pages with **GitHub Actions** as the build source in **Settings → Pages**; the workflow token cannot enable a new Pages site by itself.
+
+Run `npm test` for the input/settings/pass-contract checks. With the dev server
+running, `/tests/gpu.html` verifies the actual WebGL shaders: emitter-off rest,
+uniform thermal lift, independent heat/velocity decay, and absence of idle
+emitter shimmer. It reports a visible pass/fail result; WebGL2 and floating-point
+render targets are required for that check.
 
 ## How it works
 

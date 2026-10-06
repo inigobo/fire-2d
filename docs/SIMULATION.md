@@ -26,6 +26,20 @@ For timestep `dt`, begin with the velocity field from the previous frame:
 
 The timestep is capped at 33 ms. The solver targets responsive visual motion rather than an accurate physical flame; pressure convergence and boundary behaviour can be improved in later experiments.
 
+### Cooling, damping and emitter-off behaviour
+
+Heat and velocity use independent exponential losses: `T *= exp(-0.03 * cooling * dt)`
+and `u *= exp(-0.03 * damping * dt)`. Defaults 40 and 10 reproduce the former
+1.2/s and 0.3/s rates. Visible density still decays at `2 - 1.6 * trail / 100`.
+Velocity damping is drag; it does not solve the Laplacian diffusion term of
+viscosity. Lower cooling prolongs the bright part of a pulse, while higher trail
+prolongs its visible material. Damping reduces travel without speeding up cooling.
+
+The Gaussian base jet is multiplied by emitter power. Previously that force was
+unconditional, so setting power to zero stopped emission but retained a central
+updraft. At power zero only heat-driven buoyancy, input impulses and vorticity
+remain; the display also suppresses the emitter-centred ambient halo/shimmer.
+
 ## Fire experiments
 
 **A. Heated dye (first target).** No chemical model. Emit `T` and `D`; upward buoyancy, curl, cooling, and a temperature-to-colour ramp create a stylized flame. Fast to implement and tune.
@@ -37,7 +51,7 @@ The timestep is capped at 33 ms. The solver targets responsive visual motion rat
 - New, hot material: pale amber or white core. Cooling material: saturated warm red and a faint darker edge. Palette should be configurable by the host.
 - Preserve dark negative space around type. Bloom should suggest light without washing out controls.
 - Desktop pointer affects a local radius and adds momentum proportional to movement; do not replace the native cursor or block links.
-- Touch does not capture scrolling. Passive touch events add an initial pulse and spaced heat/momentum splats along a swipe; native scrolling continues. The autonomous emitter continues without input.
+- Touch does not capture scrolling. Passive touch events add an initial pulse and spaced heat/momentum splats along a swipe; native scrolling continues. The autonomous emitter continues without input only when its power is nonzero.
 - The host controls `start`, `pause`, `resume`, `resize`, and `destroy`, and receives a static fallback when WebGL is unavailable or reduced motion is preferred.
 
 ## Performance targets to measure

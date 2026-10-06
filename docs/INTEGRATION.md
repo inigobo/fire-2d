@@ -56,11 +56,20 @@ Start with `preset: 'candle'`, `'hearth'` (default), or `'bonfire'`. `settings` 
 | --- | --- | --- |
 | `startupPulses` | 0–24 | Number of random heat impulses on startup and default replay count. |
 | `rise`, `curl`, `glow`, `trail` | 0–100 | Lift, swirl, halo, and visible trail persistence. |
+| `cooling` | 0–100 | Heat decay rate = value × 0.03 per second. Lower values retain brightness longer; default 40. |
+| `damping` | 0–100 | Velocity decay rate = value × 0.03 per second. Higher values slow drift; default 10. This is drag, not viscosity. |
 | `emitter.x`, `emitter.y` | 0–1 | Base position from the left and bottom of the canvas. |
 | `emitter.width`, `emitter.height` | 0.01–0.4 | Source dimensions relative to canvas height. |
-| `emitter.power` | 0–3 | Heat and visible density emitted per second. |
+| `emitter.power` | 0–3 | Emission multiplier, also scaling the base jet and emitter haze. At zero there is no residual emitter-centred lift or shimmer. |
 
 Values outside these ranges are clamped. Unknown names and non-finite numbers throw. `setSettings` merges a partial override; `setPreset` replaces all current settings with a named preset. `getSettings()` returns an independent snapshot.
+
+`cooling: 0` disables explicit heat loss and `damping: 0` disables explicit drag;
+advection, boundaries and density decay still apply. To let bursts linger without
+accelerating through the centre, keep `emitter.power: 0`, reduce `rise` and
+`cooling`, increase `trail`, and raise `damping` moderately. For example:
+`{ rise: 24, cooling: 12, damping: 30, trail: 88, emitter: { power: 0 } }`.
+These values alter the existing passes, with no extra GPU targets or iterations.
 
 ## React or Next.js client component
 
@@ -114,7 +123,7 @@ The section scrolls with the page. The package stops animation when it is offscr
 
 | Method | Purpose |
 | --- | --- |
-| `setSettings({ rise, curl, glow, trail, emitter })` | Merge validated settings and emitter fields. |
+| `setSettings({ rise, curl, glow, trail, cooling, damping, startupPulses, emitter })` | Merge validated settings and emitter fields. |
 | `setPreset('candle' \| 'hearth' \| 'bonfire')` | Replace settings with a named look. |
 | `getSettings()` | Read a snapshot of the current configuration. |
 | `burst(count?)` | Queue random heat and upward momentum pulses. |

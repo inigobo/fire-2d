@@ -62,7 +62,7 @@ void main() {
 
   force: head + `
 uniform sampler2D uVelocity, uMatter;
-uniform float uDt, uRise, uTime;
+uniform float uDt, uRise, uTime, uEmitterPower;
 uniform vec2 uEmitterCenter, uEmitterRadius;
 void main() {
   vec2 velocity = texture(uVelocity, vUv).xy;
@@ -70,7 +70,9 @@ void main() {
   float core = exp(-pow((vUv.x - uEmitterCenter.x) / (uEmitterRadius.x * 1.3), 2.0) -
                    pow((vUv.y - uEmitterCenter.y) / (uEmitterRadius.y * 1.2), 2.0));
   float wave = sin(vUv.y * 31.0 + uTime * 2.4) * sin(vUv.x * 19.0 - uTime * 1.3);
-  vec2 acceleration = vec2(wave * 0.006 * matter.x, (0.06 + uRise * 0.35) * matter.x + core * 0.18);
+  // The emitter's jet must stop with emission. Thermal buoyancy remains local
+  // to the heat field, so pointer-only mode has no preferred centre updraft.
+  vec2 acceleration = vec2(wave * 0.006 * matter.x, (0.06 + uRise * 0.35) * matter.x + core * 0.18 * uEmitterPower);
   outColor = vec4(velocity + acceleration * uDt, 0.0, 0.0);
 }`,
 
@@ -145,7 +147,7 @@ void main() {
 
   display: head + sampling + `
 uniform sampler2D uMatter;
-uniform float uGlow, uAspect, uTime;
+uniform float uGlow, uAspect, uTime, uEmitterPower;
 uniform vec2 uEmitterCenter;
 
 vec3 flame(vec2 m) {
@@ -185,8 +187,8 @@ void main() {
   float shimmer = sin(uv.y * 39.0 - uTime * 3.4 + sin(uv.x * 17.0 + uTime) * 1.6);
   float heatHaze = exp(-pow((uv.x - uEmitterCenter.x) * uAspect * 2.5, 2.0)) *
                    smoothstep(0.05, 0.4, uv.y) * (1.0 - smoothstep(0.75, 1.0, uv.y));
-  vec3 background = vec3(0.026, 0.019, 0.027) + ambient * vec3(0.026, 0.003, 0.002);
-  background += heatHaze * (0.5 + 0.5 * shimmer) * vec3(0.010, 0.003, 0.001);
+  vec3 background = vec3(0.026, 0.019, 0.027) + ambient * uEmitterPower * vec3(0.026, 0.003, 0.002);
+  background += heatHaze * uEmitterPower * (0.5 + 0.5 * shimmer) * vec3(0.010, 0.003, 0.001);
   vec3 colour = background + halo * vec3(0.23, 0.041, 0.015) + flame(m);
   outColor = vec4(1.0 - exp(-colour), 1.0);
 }`,

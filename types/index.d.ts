@@ -7,7 +7,7 @@ export type FireEmitter = {
   width?: number;
   /** Emitter height relative to canvas height, 0.01–0.4. */
   height?: number;
-  /** Heat and density emission multiplier, 0–3. */
+  /** Emission/base-jet multiplier, 0–3. Zero also disables emitter-centred display haze. */
   power?: number;
 };
 
@@ -20,6 +20,10 @@ export type FireSettings = {
   glow?: number;
   /** Visible density persistence, from 0 to 100. */
   trail?: number;
+  /** Heat loss, 0–100 (lower = longer glow); default 40 preserves 1.2/s cooling. */
+  cooling?: number;
+  /** Velocity damping, 0–100 (higher = slower drift); default 10 preserves 0.3/s drag. Not viscosity. */
+  damping?: number;
   /** One-time random heat pulses on first animation, rounded and clamped to 0–24. */
   startupPulses?: number;
   emitter?: FireEmitter;

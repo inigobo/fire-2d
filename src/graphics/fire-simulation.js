@@ -179,10 +179,11 @@ export class FireSimulation {
     const emitterCenter = [emitter.x, emitter.y];
     const emitterRadius = [emitter.width / aspect, emitter.height];
 
-    passes.draw('advect', velocity.write, { uDt: dt, uDecayX: 0.3, uDecayY: 0.3 },
+    const velocityDecay = s.damping * 0.03;
+    passes.draw('advect', velocity.write, { uDt: dt, uDecayX: velocityDecay, uDecayY: velocityDecay },
       { uField: velocity.read.texture, uVelocity: velocity.read.texture });
     velocity.swap();
-    passes.draw('force', velocity.write, { uDt: dt, uRise: s.rise / 100, uTime: time,
+    passes.draw('force', velocity.write, { uDt: dt, uRise: s.rise / 100, uTime: time, uEmitterPower: emitter.power,
       uEmitterCenter: emitterCenter, uEmitterRadius: emitterRadius },
       { uVelocity: velocity.read.texture, uMatter: matter.read.texture });
     velocity.swap();
@@ -213,7 +214,7 @@ export class FireSimulation {
     velocity.swap();
 
     const trailDecay = 2.0 - (s.trail / 100) * 1.6;
-    passes.draw('advect', matter.write, { uDt: dt, uDecayX: 1.2, uDecayY: trailDecay },
+    passes.draw('advect', matter.write, { uDt: dt, uDecayX: s.cooling * 0.03, uDecayY: trailDecay },
       { uField: matter.read.texture, uVelocity: velocity.read.texture });
     matter.swap();
     passes.draw('source', matter.write,
@@ -229,7 +230,7 @@ export class FireSimulation {
       matter.swap();
     }
 
-    passes.draw('display', null, { uGlow: s.glow / 80, uAspect: aspect, uTime: time,
+    passes.draw('display', null, { uGlow: s.glow / 80, uAspect: aspect, uTime: time, uEmitterPower: emitter.power,
       uEmitterCenter: emitterCenter }, { uMatter: matter.read.texture });
   }
 
