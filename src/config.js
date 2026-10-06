@@ -26,7 +26,7 @@ export function mergeSettings(current, patch) {
         next.emitter[part] = clampSetting(part, number, EMITTER_LIMITS, `emitter.${part}`);
       }
     } else if (key === 'startupPattern') {
-      if (!['scatter', 'serpentine'].includes(value)) throw new TypeError('Unknown startup pattern');
+      if (!['scatter', 'serpentine', 'swirls'].includes(value)) throw new TypeError('Unknown startup pattern');
       next.startupPattern = value;
     } else {
       next[key] = clampSetting(key, value, LIMITS);

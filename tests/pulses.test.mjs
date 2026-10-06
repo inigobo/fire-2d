@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createPulses, createPulseBurst, takePulseImpulses, serpentinePulse } from '../src/graphics/pulses.js';
+import { createPulses, createPulseBurst, takePulseImpulses, serpentinePulse, swirlPulse } from '../src/graphics/pulses.js';
 import { FireSimulation } from '../src/graphics/fire-simulation.js';
 import { settingsForPreset } from '../src/config.js';
 
@@ -121,4 +121,45 @@ test('serpentine emits one moving source, respects input priority, and never loo
   assert.deepEqual(takePulseImpulses(createPulseBurst(0, 12, 1, random, 'serpentine'), 1, 4), []);
   assert.equal(settingsForPreset('hearth', { startupPattern: 'serpentine' }).startupPattern, 'serpentine');
   assert.throws(() => settingsForPreset('hearth', { startupPattern: 'unknown' }), TypeError);
+});
+
+test('random swirls have distinct endpoints, smooth bounded routes, and no per-frame randomness', () => {
+  let seed = 17, calls = 0;
+  const random = () => { calls++; seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  const first = createPulseBurst(3, 3, 2.4, random, 'swirls');
+  const second = createPulseBurst(3, 3, 2.4, random, 'swirls');
+  assert.equal(first.pulses.length, 3);
+  assert.notDeepEqual(first.pulses.map(p => p.path), second.pulses.map(p => p.path));
+  assert.equal(new Set(first.pulses.map(p => JSON.stringify(p.path.start))).size, 3);
+  assert.equal(new Set(first.pulses.map(p => JSON.stringify(p.path.end))).size, 3);
+  const sampledCalls = calls;
+  for (const { path } of first.pulses) {
+    const start = swirlPulse(path, 0), end = swirlPulse(path, 1);
+    assert.ok(Math.hypot(start.x - path.start.x, start.y - path.start.y) < 1e-10);
+    assert.ok(Math.hypot(end.x - path.end.x, end.y - path.end.y) < 1e-10);
+    assert.ok(Math.hypot(end.x - start.x, end.y - start.y) >= 0.32);
+    for (let step = 0; step <= 100; step++) {
+      const point = swirlPulse(path, step / 100);
+      assert.ok(point.x > 0.05 && point.x < 0.95 && point.y > 0.1 && point.y < 0.9);
+      assert.ok(Number.isFinite(point.dx) && Number.isFinite(point.dy));
+    }
+  }
+  assert.equal(takePulseImpulses(first, 0.1, 4).length, 1, 'Routes should start slightly apart');
+  let maximum = 0;
+  for (let frame = 0; frame < 180; frame++) maximum = Math.max(maximum, takePulseImpulses(first, 1 / 60, 4).length);
+  assert.equal(maximum, 3);
+  assert.equal(calls, sampledCalls);
+  assert.deepEqual(takePulseImpulses(first, 1, 4), []);
+  assert.equal(settingsForPreset('hearth', { startupPattern: 'swirls' }).startupPattern, 'swirls');
+});
+
+test('two random swirls use at most the available budget and expire under heavy input', () => {
+  const burst = createPulseBurst(2, 3, 2.4, () => 0.5, 'swirls');
+  assert.equal(burst.pulses.length, 2);
+  for (let frame = 0; frame < 181; frame++) {
+    const budget = frame % 2;
+    assert.ok(takePulseImpulses(burst, 1 / 60, budget).length <= budget);
+  }
+  assert.deepEqual(takePulseImpulses(burst, 1, 4), []);
+  assert.deepEqual(takePulseImpulses(createPulseBurst(0, 3, 2.4, Math.random, 'swirls'), 1, 4), []);
 });

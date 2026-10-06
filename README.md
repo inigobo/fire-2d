@@ -30,6 +30,11 @@ left-to-right brush that traces two gentle waves across the middle of the canvas
 Any positive `startupPulses` enables that one brush; zero disables the opening.
 The default `'scatter'` pattern retains the existing scattered bursts.
 
+For a less repetitive opening, choose `startupPattern: 'swirls'` with two or
+three pulses and a short positive duration. Each pulse gets its own random start,
+destination and curved route, with slightly staggered starts. Routes are sampled
+once per burst, stay inside the canvas, and end without looping.
+
 For slower, longer-lived pointer-only flames, try
 `settings: { emitter: { power: 0 }, rise: 24, cooling: 12, damping: 30, trail: 88 }`.
 Turning off emission now also turns off the emitter's base jet and animated heat

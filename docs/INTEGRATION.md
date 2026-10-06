@@ -72,6 +72,15 @@ slot per frame. Choose a positive duration for motion; duration zero emits once
 at the left-hand start. Pulse count zero still suppresses all startup input.
 The default pattern remains `'scatter'`. Pattern changes apply to future bursts.
 
+`startupPattern: 'swirls'` uses the pulse count for separate curved routes.
+Starts are horizontally stratified and jittered, destinations and curvature are
+randomized, and each route starts slightly later than the previous one. Each
+crosses a different portion of the canvas and completes within the finite opening.
+Use `{ startupPulses: 3, startupPattern: 'swirls', startupDuration: 3 }` for a
+brief flourish. Randomness is sampled only when the burst is created; routes do
+not jump or redraw themselves frame by frame. As with other patterns, zero count
+disables startup and pointer input retains priority in the shared frame budget.
+
 ## Configuration
 
 Start with `preset: 'candle'`, `'hearth'` (default), or `'bonfire'`. `settings` overrides any subset. The exported `FIRE_PRESETS` object lists their values. For example, a narrow flame on the right can use `preset: 'candle'` and `settings: { emitter: { x: 0.75, power: 1.1 }, glow: 50 }`.
@@ -81,7 +90,7 @@ Start with `preset: 'candle'`, `'hearth'` (default), or `'bonfire'`. `settings` 
 | `startupPulses` | 0–24 | Number of random heat impulses on startup and default replay count. |
 | `startupDuration` | 0–20 | Duration in simulation seconds; default 0 gives one-shot pulses. |
 | `startupStrength` | 0–4 | Heat/momentum strength of bursts only; default 1. |
-| `startupPattern` | `'scatter'` / `'serpentine'` | Scattered sources (default) or one left-to-right central wave. |
+| `startupPattern` | `'scatter'` / `'serpentine'` / `'swirls'` | Scattered sources (default), one central wave, or randomized curved routes. |
 | `rise`, `curl`, `glow`, `trail` | 0–100 | Lift, swirl, halo, and visible trail persistence. |
 | `cooling` | 0–100 | Heat decay rate = value × 0.03 per second. Lower values retain brightness longer; default 40. |
 | `damping` | 0–100 | Velocity decay rate = value × 0.03 per second. Higher values slow drift; default 10. This is drag, not viscosity. |
