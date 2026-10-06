@@ -20,6 +20,11 @@ The public GitHub source can also be installed with `npm install github:inigobo/
 
 Call `fire.burst()` to replay the opening pulses. Set `startupPulses: 0` for a quiet start. The demo has a pulse-count slider and replay button.
 
+For a much more visible opening, set `startupDuration: 12, startupStrength: 1.6`.
+The scattered pulse locations release heat over twelve simulation seconds, taper
+over the last quarter, then stop completely. Pointer input remains independent.
+Duration defaults to zero, preserving the original single-injection behavior.
+
 For slower, longer-lived pointer-only flames, try
 `settings: { emitter: { power: 0 }, rise: 24, cooling: 12, damping: 30, trail: 88 }`.
 Turning off emission now also turns off the emitter's base jet and animated heat

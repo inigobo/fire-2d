@@ -26,6 +26,14 @@ For timestep `dt`, begin with the velocity field from the previous frame:
 
 The timestep is capped at 33 ms. The solver targets responsive visual motion rather than an accurate physical flame; pressure convergence and boundary behaviour can be improved in later experiments.
 
+Optional sustained bursts use a finite pulse envelope: a short initial kick,
+400ms attack (shortened for brief durations), constant sustain and a smooth fade
+over the final quarter. Each source tracks its last emission time; round-robin
+sampling uses the remaining portion of the four-impulse frame budget. Heat and
+momentum increments are proportional to elapsed simulation time, with at most
+100ms of catch-up per source. The opening expires even if pointer traffic uses
+the whole budget. No wall-clock timer or persistent autonomous emitter is added.
+
 ### Cooling, damping and emitter-off behaviour
 
 Heat and velocity use independent exponential losses: `T *= exp(-0.03 * cooling * dt)`

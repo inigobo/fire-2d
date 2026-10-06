@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createPulses } from '../src/graphics/pulses.js';
+import { createPulses, createPulseBurst, takePulseImpulses } from '../src/graphics/pulses.js';
 import { FireSimulation } from '../src/graphics/fire-simulation.js';
 import { settingsForPreset } from '../src/config.js';
 
@@ -27,7 +27,7 @@ test('input and startup bursts share the four-impulse frame budget and drain onc
     passes: { draw: (...args) => draws.push(args) }, velocity: pair(), matter: pair(), pressure: pair(),
     curlField: { texture: {} }, divergence: { texture: {} },
     splats: [{ x: 0.5, y: 0.5, dx: 0, dy: 0.03, intensity: 1 }],
-    pulses: createPulses(8),
+    pulseBurst: createPulseBurst(8),
   };
   const step = () => {
     draws.length = 0;
@@ -35,13 +35,57 @@ test('input and startup bursts share the four-impulse frame budget and drain onc
     return draws.filter(([name]) => name === 'splat');
   };
   assert.equal(step().length, 8); // Four velocity and four heat passes.
-  assert.equal(simulation.pulses.length, 5);
+  assert.equal(simulation.pulseBurst.pulses.length, 5);
   assert.equal(step().length, 8);
   assert.equal(step().length, 2);
   assert.equal(step().length, 0);
   FireSimulation.prototype.burst.call(simulation, 12);
   FireSimulation.prototype.burst.call(simulation, 3);
-  assert.equal(simulation.pulses.length, 3); // Replace, never accumulate.
+  assert.equal(simulation.pulseBurst.pulses.length, 3); // Replace, never accumulate.
   assert.equal(step().length, 6);
   assert.equal(step().length, 0);
+});
+
+test('sustained openings remain active for the requested duration and then stop permanently', () => {
+  const burst = createPulseBurst(8, 12, 1.6, () => 0.5);
+  let earlyEnergy = 0, lateEnergy = 0, calls = 0;
+  for (let frame = 0; frame < 12 * 60 + 2; frame++) {
+    const impulses = takePulseImpulses(burst, 1 / 60, 4);
+    assert.ok(impulses.length <= 4);
+    const heat = impulses.reduce((sum, impulse) => sum + impulse.intensity, 0);
+    if (frame >= 60 && frame < 120) earlyEnergy += heat;
+    if (frame >= 660 && frame < 720) lateEnergy += heat;
+    calls += impulses.length;
+  }
+  assert.ok(calls > 2000);
+  assert.ok(earlyEnergy > 10);
+  assert.ok(lateEnergy > 0 && lateEnergy < earlyEnergy / 4, 'Ending must taper, not switch off at full strength');
+  assert.equal(burst.pulses.length, 0);
+  assert.deepEqual(takePulseImpulses(burst, 10, 4), []);
+});
+
+test('energy stays stable across frame rates without a pointer-backlog spike', () => {
+  const energyAt = fps => {
+    const burst = createPulseBurst(8, 12, 1.6, () => 0.5);
+    let energy = 0;
+    for (let frame = 0; frame < 12 * fps + 2; frame++) energy += takePulseImpulses(burst, 1 / fps, 4).reduce((sum, p) => sum + p.intensity, 0);
+    return energy;
+  };
+  assert.ok(Math.abs(energyAt(30) / energyAt(60) - 1) < 0.02);
+  const burst = createPulseBurst(8, 12, 1.6, () => 0.5);
+  for (let frame = 0; frame < 360; frame++) assert.deepEqual(takePulseImpulses(burst, 1 / 60, 0), []);
+  const impulses = takePulseImpulses(burst, 1 / 60, 4);
+  assert.ok(impulses.every(p => p.intensity <= 0.32 + 1e-8));
+  for (let frame = 0; frame < 400; frame++) takePulseImpulses(burst, 1 / 60, 0);
+  assert.deepEqual(takePulseImpulses(burst, 1 / 60, 4), []);
+});
+
+test('pulse settings clamp and zero count/strength create no heat', () => {
+  const settings = settingsForPreset('hearth', { startupDuration: 40, startupStrength: 10 });
+  assert.equal(settings.startupDuration, 20);
+  assert.equal(settings.startupStrength, 4);
+  assert.deepEqual(takePulseImpulses(createPulseBurst(0, 12, 2), 1 / 60, 4), []);
+  assert.ok(takePulseImpulses(createPulseBurst(8, 12, 0), 1 / 60, 4).every(p => p.intensity === 0 && p.dx === 0 && p.dy === 0));
+  assert.throws(() => createPulseBurst(8, Infinity), TypeError);
+  assert.throws(() => createPulseBurst(8, 12, NaN), TypeError);
 });

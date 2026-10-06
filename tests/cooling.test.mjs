@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FIRE_PRESETS, settingsForPreset, mergeSettings } from '../src/config.js';
 import { FireSimulation } from '../src/graphics/fire-simulation.js';
+import { createPulseBurst } from '../src/graphics/pulses.js';
 
 function passesFor(overrides = {}) {
   const draws = [];
@@ -11,7 +12,7 @@ function passesFor(overrides = {}) {
     canvas: { width: 800, height: 600 }, width: 256, height: 192,
     passes: { draw: (name, target, values) => draws.push({ name, target, values }) },
     velocity: pair(), matter: pair(), pressure: pair(), curlField: { texture: {} }, divergence: { texture: {} },
-    splats: [], pulses: [],
+    splats: [], pulseBurst: createPulseBurst(0),
   };
   FireSimulation.prototype.step.call(simulation, 1 / 60, 2);
   return draws;

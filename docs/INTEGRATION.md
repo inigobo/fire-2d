@@ -48,6 +48,21 @@ Pulses enter the existing heat and velocity fields as Gaussian impulses. They ri
 
 Call `fire.burst()` to replay the configured count or `fire.burst(12)` for a specific count. Changing `startupPulses` updates future bursts without immediately injecting heat. Repeated calls replace the pending burst instead of accumulating work.
 
+`startupDuration` extends a burst into a finite sustained opening (0–20 simulation
+seconds; zero keeps the one-shot behavior). `startupStrength` scales only the
+opening heat/momentum, not cursor input (0–4, default 1). For example:
+`{ startupPulses: 8, startupDuration: 12, startupStrength: 1.6 }`.
+Pulse locations are chosen once, with a short attack, a sustained middle and a
+smooth final-quarter fade. Heat continues cooling after injection ends. The
+sequence advances only while the simulation runs, so it pauses offscreen or
+when hidden and continues without replaying on return. It does not repeat.
+
+Sustained pulses share the same four-impulse frame budget with pointer input,
+which gets priority. Inputs are scaled by elapsed simulation time, and each
+pulse can accumulate at most 100ms of emission debt after busy input frames.
+This prevents a deferred flash; repeated `burst()` calls still replace the
+pending sequence. Changing duration/strength affects future bursts only.
+
 ## Configuration
 
 Start with `preset: 'candle'`, `'hearth'` (default), or `'bonfire'`. `settings` overrides any subset. The exported `FIRE_PRESETS` object lists their values. For example, a narrow flame on the right can use `preset: 'candle'` and `settings: { emitter: { x: 0.75, power: 1.1 }, glow: 50 }`.
@@ -55,6 +70,8 @@ Start with `preset: 'candle'`, `'hearth'` (default), or `'bonfire'`. `settings` 
 | Setting | Range | Effect |
 | --- | --- | --- |
 | `startupPulses` | 0–24 | Number of random heat impulses on startup and default replay count. |
+| `startupDuration` | 0–20 | Duration in simulation seconds; default 0 gives one-shot pulses. |
+| `startupStrength` | 0–4 | Heat/momentum strength of bursts only; default 1. |
 | `rise`, `curl`, `glow`, `trail` | 0–100 | Lift, swirl, halo, and visible trail persistence. |
 | `cooling` | 0–100 | Heat decay rate = value × 0.03 per second. Lower values retain brightness longer; default 40. |
 | `damping` | 0–100 | Velocity decay rate = value × 0.03 per second. Higher values slow drift; default 10. This is drag, not viscosity. |
@@ -123,7 +140,7 @@ The section scrolls with the page. The package stops animation when it is offscr
 
 | Method | Purpose |
 | --- | --- |
-| `setSettings({ rise, curl, glow, trail, cooling, damping, startupPulses, emitter })` | Merge validated settings and emitter fields. |
+| `setSettings({ rise, curl, glow, trail, cooling, damping, startupPulses, startupDuration, startupStrength, emitter })` | Merge validated settings and emitter fields. |
 | `setPreset('candle' \| 'hearth' \| 'bonfire')` | Replace settings with a named look. |
 | `getSettings()` | Read a snapshot of the current configuration. |
 | `burst(count?)` | Queue random heat and upward momentum pulses. |

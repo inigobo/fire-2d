@@ -26,6 +26,10 @@ export type FireSettings = {
   damping?: number;
   /** One-time random heat pulses on first animation, rounded and clamped to 0–24. */
   startupPulses?: number;
+  /** Sustained opening in simulation seconds, 0–20. Default 0 keeps one-shot pulses. */
+  startupDuration?: number;
+  /** Opening pulse strength, 0–4. Default 1; does not change cursor input. */
+  startupStrength?: number;
   emitter?: FireEmitter;
 };
 
