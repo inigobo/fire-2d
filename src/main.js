@@ -21,6 +21,7 @@ function start() {
   try {
     const settings = Object.fromEntries([...document.querySelectorAll('.controls input')]
       .map(input => [input.id, Number(input.value)]));
+    settings.startupPattern = document.querySelector('#startupPattern').value;
     simulation = createFire(canvas, {
       interactionTarget: stage,
       preset: preset.value === 'custom' ? 'hearth' : preset.value,
@@ -52,10 +53,16 @@ for (const input of document.querySelectorAll('.controls input')) {
 preset.addEventListener('change', () => {
   simulation?.setPreset(preset.value);
   const settings = FIRE_PRESETS[preset.value];
+  document.querySelector('#startupPattern').value = settings.startupPattern;
   for (const input of document.querySelectorAll('.controls input')) {
     input.value = settings[input.id];
     document.querySelector(`#${input.id}-value`).value = input.value;
   }
+});
+
+document.querySelector('#startupPattern').addEventListener('change', event => {
+  simulation?.setSettings({ startupPattern: event.target.value });
+  preset.value = 'custom';
 });
 
 document.querySelector('#pulse-burst').addEventListener('click', () => simulation?.burst());

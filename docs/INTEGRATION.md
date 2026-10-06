@@ -63,6 +63,15 @@ pulse can accumulate at most 100ms of emission debt after busy input frames.
 This prevents a deferred flash; repeated `burst()` calls still replace the
 pending sequence. Changing duration/strength affects future bursts only.
 
+`startupPattern: 'serpentine'` changes that opening to one moving brush, regardless
+of the positive pulse count. Over the configured duration it moves from x=0.06
+to x=0.94 with y=0.5 ± 0.1, tracing two sine-wave cycles around the horizontal
+midline. Momentum follows the path tangent; previously emitted heat remains in
+the normal fluid simulation. It never loops and uses at most one available input
+slot per frame. Choose a positive duration for motion; duration zero emits once
+at the left-hand start. Pulse count zero still suppresses all startup input.
+The default pattern remains `'scatter'`. Pattern changes apply to future bursts.
+
 ## Configuration
 
 Start with `preset: 'candle'`, `'hearth'` (default), or `'bonfire'`. `settings` overrides any subset. The exported `FIRE_PRESETS` object lists their values. For example, a narrow flame on the right can use `preset: 'candle'` and `settings: { emitter: { x: 0.75, power: 1.1 }, glow: 50 }`.
@@ -72,6 +81,7 @@ Start with `preset: 'candle'`, `'hearth'` (default), or `'bonfire'`. `settings` 
 | `startupPulses` | 0–24 | Number of random heat impulses on startup and default replay count. |
 | `startupDuration` | 0–20 | Duration in simulation seconds; default 0 gives one-shot pulses. |
 | `startupStrength` | 0–4 | Heat/momentum strength of bursts only; default 1. |
+| `startupPattern` | `'scatter'` / `'serpentine'` | Scattered sources (default) or one left-to-right central wave. |
 | `rise`, `curl`, `glow`, `trail` | 0–100 | Lift, swirl, halo, and visible trail persistence. |
 | `cooling` | 0–100 | Heat decay rate = value × 0.03 per second. Lower values retain brightness longer; default 40. |
 | `damping` | 0–100 | Velocity decay rate = value × 0.03 per second. Higher values slow drift; default 10. This is drag, not viscosity. |

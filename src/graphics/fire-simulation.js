@@ -11,7 +11,7 @@ export class FireSimulation {
     this.passes = new Passes(this.gl, shaders);
     this.settings = settings;
     this.splats = [];
-    this.pulseBurst = createPulseBurst(settings.startupPulses, settings.startupDuration, settings.startupStrength);
+    this.pulseBurst = createPulseBurst(settings.startupPulses, settings.startupDuration, settings.startupStrength, Math.random, settings.startupPattern);
     this.previousPointer = null;
     this.activeTouch = null;
     this.enabled = autoplay;
@@ -53,7 +53,7 @@ export class FireSimulation {
   }
 
   burst(count = this.settings.startupPulses) {
-    this.pulseBurst = createPulseBurst(count, this.settings.startupDuration, this.settings.startupStrength);
+    this.pulseBurst = createPulseBurst(count, this.settings.startupDuration, this.settings.startupStrength, Math.random, this.settings.startupPattern);
   }
 
   setSettings(settings) { this.settings = settings; }

@@ -30,6 +30,8 @@ export type FireSettings = {
   startupDuration?: number;
   /** Opening pulse strength, 0–4. Default 1; does not change cursor input. */
   startupStrength?: number;
+  /** Opening shape. Serpentine uses one moving brush when startupPulses > 0. */
+  startupPattern?: 'scatter' | 'serpentine';
   emitter?: FireEmitter;
 };
 

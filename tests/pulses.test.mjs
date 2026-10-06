@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createPulses, createPulseBurst, takePulseImpulses } from '../src/graphics/pulses.js';
+import { createPulses, createPulseBurst, takePulseImpulses, serpentinePulse } from '../src/graphics/pulses.js';
 import { FireSimulation } from '../src/graphics/fire-simulation.js';
 import { settingsForPreset } from '../src/config.js';
 
@@ -88,4 +88,37 @@ test('pulse settings clamp and zero count/strength create no heat', () => {
   assert.ok(takePulseImpulses(createPulseBurst(8, 12, 0), 1 / 60, 4).every(p => p.intensity === 0 && p.dx === 0 && p.dy === 0));
   assert.throws(() => createPulseBurst(8, Infinity), TypeError);
   assert.throws(() => createPulseBurst(8, 12, NaN), TypeError);
+});
+
+test('serpentine opening crosses left to right in the central band with two smooth waves', () => {
+  const points = Array.from({ length: 9 }, (_, index) => serpentinePulse(index / 8));
+  const expectedY = [0.5, 0.6, 0.5, 0.4, 0.5, 0.6, 0.5, 0.4, 0.5];
+  assert.equal(points[0].x, 0.06);
+  assert.ok(Math.abs(points.at(-1).x - 0.94) < 1e-10);
+  points.forEach((point, index) => {
+    assert.ok(Math.abs(point.y - expectedY[index]) < 1e-10);
+    assert.ok(point.dx > 0);
+    if (index) assert.ok(point.x > points[index - 1].x);
+  });
+});
+
+test('serpentine emits one moving source, respects input priority, and never loops', () => {
+  const random = () => { throw new Error('Serpentine must not depend on randomness'); };
+  const burst = createPulseBurst(8, 12, 1.6, random, 'serpentine');
+  assert.equal(burst.pulses.length, 1);
+  let lastX = 0;
+  for (let frame = 0; frame < 720; frame++) {
+    const impulses = takePulseImpulses(burst, 1 / 60, frame % 5 ? 4 : 0);
+    assert.ok(impulses.length <= 1);
+    for (const point of impulses) {
+      assert.ok(point.x > lastX);
+      assert.ok(point.y >= 0.4 && point.y <= 0.6);
+      lastX = point.x;
+    }
+  }
+  assert.ok(lastX > 0.93);
+  assert.deepEqual(takePulseImpulses(burst, 1, 4), []);
+  assert.deepEqual(takePulseImpulses(createPulseBurst(0, 12, 1, random, 'serpentine'), 1, 4), []);
+  assert.equal(settingsForPreset('hearth', { startupPattern: 'serpentine' }).startupPattern, 'serpentine');
+  assert.throws(() => settingsForPreset('hearth', { startupPattern: 'unknown' }), TypeError);
 });

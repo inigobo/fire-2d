@@ -25,6 +25,11 @@ The scattered pulse locations release heat over twelve simulation seconds, taper
 over the last quarter, then stop completely. Pointer input remains independent.
 Duration defaults to zero, preserving the original single-injection behavior.
 
+Set `startupPattern: 'serpentine'` with a positive `startupDuration` for a single
+left-to-right brush that traces two gentle waves across the middle of the canvas.
+Any positive `startupPulses` enables that one brush; zero disables the opening.
+The default `'scatter'` pattern retains the existing scattered bursts.
+
 For slower, longer-lived pointer-only flames, try
 `settings: { emitter: { power: 0 }, rise: 24, cooling: 12, damping: 30, trail: 88 }`.
 Turning off emission now also turns off the emitter's base jet and animated heat

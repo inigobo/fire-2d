@@ -20,12 +20,26 @@ export function createPulses(count, random = Math.random) {
   }));
 }
 
-/** One finite opening sequence. Defaults preserve the original one-shot burst. */
-export function createPulseBurst(count, duration = 0, strength = 1, random = Math.random) {
-  if (!Number.isFinite(duration) || !Number.isFinite(strength)) throw new TypeError('Pulse duration and strength must be finite');
-  const pulses = createPulses(count, random);
+/** One moving brush follows two gentle waves across the middle of the field. */
+export function serpentinePulse(progress) {
+  const t = Math.max(0, Math.min(1, progress));
+  const phase = t * Math.PI * 4;
   return {
-    pulses, duration: Math.max(0, Math.min(20, duration)), strength: Math.max(0, Math.min(4, strength)),
+    x: 0.06 + 0.88 * t, y: 0.5 + 0.1 * Math.sin(phase),
+    dx: 0.04, dy: 0.06 * Math.cos(phase), intensity: 3.5, radius: 0.055,
+  };
+}
+
+/** One finite opening sequence. Defaults preserve the original one-shot burst. */
+export function createPulseBurst(count, duration = 0, strength = 1, random = Math.random, pattern = 'scatter') {
+  if (!Number.isFinite(duration) || !Number.isFinite(strength)) throw new TypeError('Pulse duration and strength must be finite');
+  if (!Number.isFinite(count)) throw new TypeError('Pulse count must be finite');
+  if (!['scatter', 'serpentine'].includes(pattern)) throw new TypeError('Unknown startup pattern');
+  const pulses = pattern === 'serpentine'
+    ? Math.round(Math.max(0, Math.min(24, count))) ? [serpentinePulse(0)] : []
+    : createPulses(count, random);
+  return {
+    pulses, pattern, duration: Math.max(0, Math.min(20, duration)), strength: Math.max(0, Math.min(4, strength)),
     elapsed: 0, cursor: 0, lastEmission: pulses.map(() => 0), initialized: pulses.map(() => false),
   };
 }
@@ -49,7 +63,7 @@ export function takePulseImpulses(burst, dt, budget) {
   const impulses = [];
   for (let i = 0; i < Math.min(count, burst.pulses.length); i++) {
     const index = burst.cursor++ % burst.pulses.length;
-    const pulse = burst.pulses[index];
+    const pulse = burst.pattern === 'serpentine' ? serpentinePulse(burst.elapsed / burst.duration) : burst.pulses[index];
     // Cap debt after pointer-heavy frames: never release an accumulated heat spike.
     const elapsed = Math.min(0.1, burst.elapsed - burst.lastEmission[index]);
     const kick = !burst.initialized[index] && burst.elapsed < 0.5 ? 0.6 : 0;
